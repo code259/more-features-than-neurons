@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>More Features Than Neurons — An Interactive Tour of Superposition</title>
 <meta name="description" content="An interactive explainer: how neural networks cram more concepts into fewer dimensions, why that makes them hard to read, and how sparse autoencoders unscramble the mess. Every experiment runs live in your browser.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314181a'/%3E%3Cg stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='16' y1='16' x2='16' y2='5' stroke='%23e0a300'/%3E%3Cline x1='16' y1='16' x2='26.5' y2='12.6' stroke='%232a7de1'/%3E%3Cline x1='16' y1='16' x2='22.5' y2='24.9' stroke='%23e0532f'/%3E%3Cline x1='16' y1='16' x2='9.5' y2='24.9' stroke='%2319a77f'/%3E%3Cline x1='16' y1='16' x2='5.5' y2='12.6' stroke='%238e5bd0'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e2620'/%3E%3Cg stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='16' y1='16' x2='16' y2='5' stroke='%23e0a300'/%3E%3Cline x1='16' y1='16' x2='26.5' y2='12.6' stroke='%232a7de1'/%3E%3Cline x1='16' y1='16' x2='22.5' y2='24.9' stroke='%23e0532f'/%3E%3Cline x1='16' y1='16' x2='9.5' y2='24.9' stroke='%2319a77f'/%3E%3Cline x1='16' y1='16' x2='5.5' y2='12.6' stroke='%238e5bd0'/%3E%3C/g%3E%3C/svg%3E">
 <meta property="og:type" content="article">
 <meta property="og:title" content="More Features Than Neurons">
 <meta property="og:description" content="Why single neurons mean several things at once, and how sparsity both causes the problem and cures it. Every experiment trains live in your browser.">
@@ -28,13 +28,14 @@
 @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/plexmono-600.woff2) format('woff2')}
 
 :root{
-  /* the human world */
-  --bg:#f7f5ee; --ink:#191813; --ink2:#5f5a4e; --rule:#e2ddcf; --card:#efece1;
-  /* the machine world */
-  --m-bg:#14181a; --m-card:#1b2124; --m-rule:#2a3034; --m-text:#8fa097; --m-bright:#e8e4d8;
+  /* the human world — cool paper, green-black ink */
+  --bg:#eef0ea; --ink:#1b211c; --ink2:#56605a; --rule:#d4d9d0; --card:#e2e7dc;
+  --paper:#f7f8f4;
+  /* the machine world — deep forest */
+  --m-bg:#1e2620; --m-card:#27312a; --m-rule:#38443b; --m-text:#93a396; --m-bright:#eef0ea;
   /* semantic only */
-  --live:#5ec99a; --good:#19a77f; --bad:#d04f2e; --bad-d:#ff6b4a;
-  --accent:#191813;
+  --live:#a9c79a; --good:#2e7d5b; --bad:#b4482a; --bad-d:#ff6b4a;
+  --accent:#1b211c;
   /* feature identity — the only saturated colors on the page */
   --f0:#e0a300; --f1:#2a7de1; --f2:#e0532f; --f3:#19a77f; --f4:#8e5bd0; --f5:#d14a8e; --f6:#3bb8c9; --f7:#8a7a5c;
   --serif:'Newsreader',Georgia,'Times New Roman',serif;
@@ -56,28 +57,28 @@ h2{font-size:31px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;font-weig
 h2 .secno{font-family:var(--mono);font-size:.5em;font-weight:600;letter-spacing:.12em;color:var(--ink2);vertical-align:.45em;margin-right:10px}
 h3{font-size:21px;margin:30px 0 6px;font-weight:600}
 p{margin:14px 0}
-a{color:var(--ink);text-decoration-color:#b9b2a0;text-underline-offset:2.5px}
+a{color:var(--ink);text-decoration-color:#b3bcb2;text-underline-offset:2.5px}
 a:hover{text-decoration-color:var(--ink)}
-em.term{font-style:normal;background:linear-gradient(transparent 68%,#e9e2c8 68%);padding:0 2px}
+em.term{font-style:normal;background:linear-gradient(transparent 68%,#dae3d1 68%);padding:0 2px}
 .math{font-style:italic;white-space:nowrap}
 .math sup,.math sub{font-size:.72em}
-mark{background:#f0e9cd;padding:0 2px;border-radius:2px}
+mark{background:#dde5d5;padding:0 2px;border-radius:2px}
 .chip{display:inline-block;font-family:var(--mono);font-size:.66em;font-weight:600;color:#fff;padding:1px 8px 2px;border-radius:99px;vertical-align:1px;letter-spacing:.02em}
 .takeaway{background:var(--card);border-left:3px solid var(--ink);padding:14px 18px;margin:26px 0;font-size:18.5px}
 .takeaway b{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:4px;font-weight:600}
 .aside{font-size:16.5px;color:var(--ink2);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:12px 2px;margin:24px 0}
 /* ---------- widgets: paper instruments ---------- */
-figure.widget{margin:30px -40px;background:#fffdf6;border:1px solid var(--rule);border-radius:10px;font-family:var(--mono);overflow:hidden}
+figure.widget{margin:30px -40px;background:var(--paper);border:1px solid var(--rule);border-radius:10px;font-family:var(--mono);overflow:hidden}
 @media(max-width:800px){figure.widget{margin:30px -10px}}
 .w-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 18px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
 .w-title{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
 .w-body{padding:16px 18px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
 .w-col{display:flex;flex-direction:column;gap:8px;align-items:center}
 .w-col .lbl{font-size:11px;color:var(--ink2);font-weight:400;letter-spacing:.01em}
-figcaption{font-family:var(--serif);font-size:16px;color:var(--ink2);padding:12px 18px 16px;border-top:1px dashed var(--rule);line-height:1.5;background:#fffdf6}
+figcaption{font-family:var(--serif);font-size:16px;color:var(--ink2);padding:12px 18px 16px;border-top:1px dashed var(--rule);line-height:1.5;background:var(--paper)}
 canvas{display:block;touch-action:none;border-radius:6px}
 canvas.grabbable{cursor:grab}
-.btn{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;padding:7px 13px;border-radius:6px;border:1px solid #c9c3b2;background:transparent;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
+.btn{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;padding:7px 13px;border-radius:6px;border:1px solid #c2c8bd;background:transparent;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
 .btn:hover{border-color:var(--ink)}
 .btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .btn.primary:hover{background:#000}
@@ -89,7 +90,7 @@ input[type=range]{accent-color:var(--ink);width:170px}
 .score .v{font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
 .score .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:600}
 .score.win .v{color:var(--good)}
-.toggle{display:flex;border:1px solid #c9c3b2;border-radius:6px;overflow:hidden}
+.toggle{display:flex;border:1px solid #c2c8bd;border-radius:6px;overflow:hidden}
 .toggle button{font-family:var(--mono);font-size:12px;font-weight:600;border:0;background:transparent;color:var(--ink2);padding:7px 13px;cursor:pointer}
 .toggle button.on{background:var(--ink);color:var(--bg)}
 .readout{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
@@ -98,19 +99,19 @@ input[type=range]{accent-color:var(--ink);width:170px}
 /* live / frozen indicator */
 .ind{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--ink2)}
 .ind i{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block}
-.ind.frozen i{background:#7a766a}
+.ind.frozen i{background:#6d7a70}
 /* ---------- machine-world figures: dark instrument panels ---------- */
-figure.widget.machine{border-color:#23282b;background:var(--m-bg)}
+figure.widget.machine{border-color:#2c3730;background:var(--m-bg)}
 .machine .w-head{background:var(--m-bg);border-bottom:1px solid var(--m-rule)}
 .machine .w-title{color:var(--m-text)}
 .machine .readout{color:var(--m-text)}
 .machine .readout b{color:var(--m-bright)}
-.machine .readout a{color:var(--m-bright);text-decoration-color:#5a655f}
+.machine .readout a{color:var(--m-bright);text-decoration-color:#65746a}
 .machine .w-body{background:var(--m-bg)}
 .machine .w-col .lbl{color:var(--m-text)}
-.machine .btn{border-color:#3a4348;color:var(--m-text);background:transparent}
+.machine .btn{border-color:#445147;color:var(--m-text);background:transparent}
 .machine .btn:hover{border-color:var(--m-bright);color:var(--m-bright)}
-.machine .toggle{border-color:#3a4348}
+.machine .toggle{border-color:#445147}
 .machine .toggle button{background:transparent;color:var(--m-text)}
 .machine .toggle button.on{background:var(--m-bright);color:var(--m-bg)}
 .machine .ctrl{color:var(--m-text)}
@@ -121,37 +122,37 @@ figure.widget.machine{border-color:#23282b;background:var(--m-bg)}
 .machine .score.win .v{color:var(--live)}
 .machine .ind{color:var(--m-text)}
 .machine .who{background:var(--m-card);border-color:var(--m-rule);color:var(--m-text)}
-.machine .who.m{color:var(--m-bright);border-color:#4a5358}
-.machine figcaption{background:#fffdf6}
+.machine .who.m{color:var(--m-bright);border-color:#54635a}
+.machine figcaption{background:var(--paper)}
 /* widget provenance badge: the machine itself vs. a sibling experiment */
 .who{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:99px;padding:3px 10px;white-space:nowrap}
-.who.m{color:var(--ink);border-color:#aaa494}
+.who.m{color:var(--ink);border-color:#9fab9f}
 /* record cards (real-model activation records) */
 .snips{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 18px}
 @media(max-width:620px){.snips{grid-template-columns:1fr}}
-.snip{background:var(--card);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#46423a}
+.snip{background:var(--card);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#3f4a42}
 .snip .tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:6px}
 .machine .snips{background:var(--m-bg)}
 .machine .snip{background:var(--m-card);color:var(--m-text)}
-.machine .snip .tag{color:#6d7a72}
-.snip .tk{border-radius:3px;padding:0 1px;background:rgba(232,228,216,calc(var(--a)*.35));cursor:default}
-.snip .tk.hi{background:rgba(232,228,216,calc(.3 + var(--a)*.62));color:#14181a}
+.machine .snip .tag{color:#7d8c80}
+.snip .tk{border-radius:3px;padding:0 1px;background:rgba(238,240,234,calc(var(--a)*.35));cursor:default}
+.snip .tk.hi{background:rgba(238,240,234,calc(.3 + var(--a)*.62));color:#14181a}
 /* try line: one concrete action per instrument */
-.try{display:flex;gap:10px;align-items:baseline;padding:10px 18px;border-top:1px dashed var(--rule);font-family:var(--serif);font-size:15.5px;color:var(--ink2);background:#fffdf6}
-.try b{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--ink);border:1px solid #c9c3b2;border-radius:99px;padding:2px 8px;flex-shrink:0}
+.try{display:flex;gap:10px;align-items:baseline;padding:10px 18px;border-top:1px dashed var(--rule);font-family:var(--serif);font-size:15.5px;color:var(--ink2);background:var(--paper)}
+.try b{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--ink);border:1px solid #c2c8bd;border-radius:99px;padding:2px 8px;flex-shrink:0}
 /* reproduction checklist */
 .repro{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 18px;font-family:var(--mono);font-size:13px;line-height:2;color:var(--ink2);margin:16px 0}
 .repro b{color:var(--ink);font-weight:600}
 .repro .ok{color:var(--good);font-weight:600}
 /* model diagram */
-.diagram{display:flex;justify-content:center;padding:18px;background:#fffdf6}
+.diagram{display:flex;justify-content:center;padding:18px;background:var(--paper)}
 .diagram svg{max-width:100%;height:auto}
 /* footer */
 footer{border-top:1px solid var(--rule);margin-top:70px;padding:26px 0;font-size:15.5px;color:var(--ink2)}
 footer h3{font-size:16px}
 ol.refs{padding-left:20px;font-size:15px;line-height:1.55}
 ol.refs li{margin-bottom:6px}
-.fin{text-align:center;color:#c9c3b2;font-size:24px;letter-spacing:.4em;margin:50px 0 0}
+.fin{text-align:center;color:#c2c8bd;font-size:24px;letter-spacing:.4em;margin:50px 0 0}
 @media(max-width:640px){h1{font-size:34px}.dek{font-size:19px}body{font-size:18px}}
 /* hero machine */
 .lamps{display:flex;flex-direction:column;gap:7px;min-width:130px}
@@ -166,7 +167,7 @@ ol.refs li{margin-bottom:6px}
 /* story map: the specimen + the argument, always in view (wide screens) */
 #map{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:9;width:170px;font-family:var(--mono);transition:opacity .45s}
 #map.off{opacity:0;pointer-events:none}
-#map .spec-card{display:block;background:var(--m-bg);border:1px solid #23282b;border-radius:8px;padding:9px 8px 7px;text-align:center;text-decoration:none;margin-bottom:10px}
+#map .spec-card{display:block;background:var(--m-bg);border:1px solid #2c3730;border-radius:8px;padding:9px 8px 7px;text-align:center;text-decoration:none;margin-bottom:10px}
 #map .spec-card:hover{border-color:var(--m-text)}
 #map .spec-card canvas{margin:0 auto}
 #map .spec-card .k{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--m-bright);display:block;margin-top:5px}
@@ -195,12 +196,12 @@ ol.refs li{margin-bottom:6px}
 .scene-stage{display:flex;gap:26px;align-items:center;justify-content:center;flex-wrap:wrap;will-change:transform;transform-style:preserve-3d}
 .scene-stage .w-col{gap:10px}
 .scene-stage .lbl{color:var(--m-text)}
-.scene-stage canvas{box-shadow:0 18px 60px rgba(0,0,0,.55);border:1px solid #23282b;border-radius:10px}
+.scene-stage canvas{box-shadow:0 18px 60px rgba(0,0,0,.55);border:1px solid #2c3730;border-radius:10px}
 .scene-stage .lamps{display:flex;flex-direction:column;gap:8px;min-width:140px}
 .scene-stage .lamps button{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:8px;padding:9px 14px;cursor:pointer;transition:all .12s}
 .scene-stage .lamps button i{width:12px;height:12px;border-radius:50%;display:inline-block;opacity:.45;transition:all .12s}
 .scene-stage .lamps button:hover{border-color:var(--m-bright);color:var(--m-bright)}
-.scene-stage .lamps button.on{background:#232a2e;border-color:var(--m-bright);color:var(--m-bright)}
+.scene-stage .lamps button.on{background:#2b352e;border-color:var(--m-bright);color:var(--m-bright)}
 .scene-stage .lamps button.lit i{opacity:1;box-shadow:0 0 12px 2px currentColor}
 .scene-stage .subtitle{flex-basis:100%;text-align:center;font-family:var(--serif);font-size:17px;font-weight:400;font-style:italic;color:var(--m-bright);min-height:26px;padding:4px 10px;text-shadow:0 1px 12px rgba(0,0,0,.7)}
 .scroll-cue{align-self:center;text-align:center;font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--m-text);padding-bottom:6px;transition:opacity .5s}
@@ -220,10 +221,10 @@ details.primer summary::-webkit-details-marker{display:none}
 details.primer summary::before{content:'⊕';font-size:15px;flex-shrink:0;transition:transform .2s}
 details.primer[open] summary::before{content:'⊖'}
 details.primer summary .gist{font-weight:400;color:var(--ink2);font-family:var(--serif);font-style:italic;font-size:15px;letter-spacing:0}
-details.primer .p-body{padding:2px 18px 14px;color:#3d3a32;border-top:1px dashed var(--rule)}
+details.primer .p-body{padding:2px 18px 14px;color:#39433c;border-top:1px dashed var(--rule)}
 details.primer .p-body p{margin:10px 0}
 details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
-.linklike{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;text-decoration-color:#b9b2a0;cursor:pointer}
+.linklike{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;text-decoration-color:#b3bcb2;cursor:pointer}
 </style><!--/CSS-->
 </head>
 <body>
@@ -231,22 +232,22 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 
 
 <aside id="map" class="off" aria-label="story map">
-  <a class="spec-card" href="#machine" title="back to the machine">
+  <a class="spec-card" href="#machine" title="back to the model">
     <canvas width="118" height="118"></canvas>
-    <span class="k">⬡ the machine</span>
+    <span class="k">⬡ the model</span>
     <span class="st">—</span>
-    <span class="cap">every section below studies this one network</span>
+    <span class="cap">every section below studies this network</span>
   </a>
   <nav>
-    <a href="#machine">machine<span class="q">Six concepts, two neurons — it works. How?</span></a>
-    <a href="#hook">mystery<span class="q">Real neurons mean many things at once. Why?</span></a>
-    <a href="#game">game<span class="q">Feel the constraint: more features than room.</span></a>
-    <a href="#model">noise gate<span class="q">ReLU + bias delete crosstalk — the license to cram.</span></a>
+    <a href="#machine">the model<span class="q">Six concepts stored in two neurons.</span></a>
+    <a href="#hook">neurons<span class="q">Real neurons fire on unrelated things.</span></a>
+    <a href="#game">packing<span class="q">More features than room to put them.</span></a>
+    <a href="#model">toy model<span class="q">A ReLU deletes crosstalk below threshold.</span></a>
     <a href="#sparsity">sparsity<span class="q">Rare features share space almost for free.</span></a>
-    <a href="#geometry">geometry<span class="q">It's sphere packing — neurons are bystanders.</span></a>
-    <a href="#poly">the bill<span class="q">Every neuron axis cuts across many features.</span></a>
-    <a href="#sae">the cure<span class="q">Sparsity, run backwards, un-crams the machine.</span></a>
-    <a href="#epilogue">so what<span class="q">Interpretability is the decompression problem.</span></a>
+    <a href="#geometry">geometry<span class="q">Sphere packing. Neurons are bystanders.</span></a>
+    <a href="#poly">polysemanticity<span class="q">Every axis cuts across many features.</span></a>
+    <a href="#sae">autoencoders<span class="q">Sparsity, run backwards, recovers them.</span></a>
+    <a href="#epilogue">decompression<span class="q">Interpretability is the decompression problem.</span></a>
   </nav>
 </aside>
 
@@ -258,7 +259,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
       <div class="scene-title">
         <div class="kicker">An interactive explainer</div>
         <h1>More Features Than Neurons</h1>
-        <p class="scene-dek">You are standing inside a neural network. Drifting around you is everything it has to remember. It has <b>two neurons</b> to do that with, and it manages. This page is about how.</p>
+        <p class="scene-dek">A neural network with six concepts to store and <b>two neurons</b> to store them in. Click a concept to fire it and watch what comes back out.</p>
       </div>
       <div class="scene-hud">
         <span class="readout r-err">—</span>
@@ -282,7 +283,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
       <div class="w-col"><canvas class="c-out"></canvas><span class="lbl" style="max-width:280px;text-align:center">…and read back out (tick = truth, bar = readout)</span></div>
       <div class="subtitle">—</div>
     </div>
-    <div class="scroll-cue">scroll — we take the machine apart<span class="chev">⌄</span></div>
+    <div class="scroll-cue">scroll<span class="chev">⌄</span></div>
   </div>
 </section>
 
@@ -298,12 +299,12 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
     <span>≈ 15 min + play time</span>
     <span>no ML background needed — ⊕ primer cards fill in prerequisites as they come up (<button id="primer-all" class="linklike">expand all</button>)</span>
   </div>
-  <p class="bridge">That dark room is a complete neural network. Eighteen numbers, six concepts, two neurons, and it trained itself in your browser in the second it took you to scroll past. The rest of this page takes it apart: how the cramming works, when it breaks, and how to run it backwards. If you noticed the machine refusing to store <b>weather</b>, that is §3.</p>
+  <p class="bridge">That was a complete neural network: 18 numbers, six concepts, two neurons, trained in your browser in the second it took you to scroll past. The rest of this page takes it apart — how the cramming works, when it breaks, and how to run it backwards. If you noticed it refusing to store <b>weather</b>, that is §3.</p>
 </div>
 
 <!-- ============ 0. HOOK ============ -->
 <section id="hook">
-  <h2><span class="secno">0.</span>The neuron that meant too much</h2>
+  <h2><span class="secno">0.</span>One neuron, many meanings</h2>
   <p>Open a trained language model and look at one neuron. A neuron here is a single number in a single layer: it takes some value on every input, large for a few, zero for most. If networks were built the way we would build them, that number would mean something. One neuron for quotation marks. One for wetness. One for the Golden Gate Bridge.</p>
   <p>They are not built that way. Below are four neurons from GPT-2, each shown with the text that excites it most, taken verbatim from OpenAI's public neuron dataset.<a href="#ref5"><sup>[5]</sup></a> Brightness is the measured activation: the brighter the token, the harder that neuron fired. Read the four records and try to finish the sentence <em>“this neuron detects&nbsp;___.”</em></p>
 
@@ -325,12 +326,12 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
   <p>Surveillance footage and lobster Newburg. Court citations and graduation parties. Go digging through the layers and most neurons come back looking like this one. The network has not malfunctioned. It is short on space.</p>
   <p>Count the room. GPT-2 small carries 768 numbers per layer and a vocabulary of 50,257 tokens. Even if the only thing it ever had to record were which token it just read, that leaves 65 tokens competing for every dimension. Tokens are the easy part. The model also tracks who is speaking, what language this is, whether the tone is sarcastic, whether we are inside a quotation, inside a URL, inside a legal citation. When Anthropic ran dictionary learning over a production model, it came back with 34 million distinct features<a href="#ref3"><sup>[3]</sup></a>. Give each one a private dimension and you need a network thousands of times wider than anything that exists.</p>
   <p>So models don't. They <em class="term">cram</em>, storing more concepts than they have dimensions and paying for it in ways the rest of this page works through. The practice has a name, <em class="term">superposition</em>, and a theory precise enough to make predictions<a href="#ref1"><sup>[1]</sup></a>. The model at the center of that theory has 18 parameters and trains in about a second, which makes the usual way of meeting it, as a PDF of finished figures, a waste of a good experiment.</p>
-  <p>Every claim below is running live on this page instead. You get the first experiment yourself, before any network does: §1 hands you the packing problem directly. §2 adds a single nonlinearity and the rules change. §3 is one dial that reorganizes everything. §4 catches the network doing geometry behind your back. §5 is the bill. §6 is the way out. Knowing what a vector is will carry you the whole way; the ⊕ primers cover the rest as it arrives.</p>
+  <p>Every result below runs live on this page instead, and you get the first experiment before any network does. §1 hands you the packing problem directly. §2 adds a single nonlinearity and the rules change. §3 is one dial that reorganizes everything. §4 catches the network doing geometry behind your back. §5 is the bill. §6 is the way out. Knowing what a vector is will carry you the whole way; the ⊕ primers cover the rest as it arrives.</p>
 </section>
 
 <!-- ============ 1. GAME ============ -->
 <section id="game">
-  <h2><span class="secno">1.</span>Try packing it yourself</h2>
+  <h2><span class="secno">1.</span>The packing problem</h2>
   <p>Strip the network's problem down to its skeleton and it becomes a puzzle you can solve with a mouse. You have <b>six features</b> to store, six concepts the model cares about, and <b>two dimensions</b> to put them in. Each feature is kept as a <em>direction</em>: an arrow in the flat space below, which needs length 1 to count as fully stored. The catch is that arrows interact. Any two that are not perpendicular <em>interfere</em>, so reading one picks up a little of the other, and the score charges you for every bit of it.</p>
   <p>Two dimensions hold exactly two perpendicular arrows. You have six. Someone has to overlap.</p>
 
@@ -371,7 +372,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 
 <!-- ============ 2. TOY MODEL ============ -->
 <section id="model">
-  <h2><span class="secno">2.</span>A model small enough to hold in your head</h2>
+  <h2><span class="secno">2.</span>The toy model</h2>
   <p>Now hand the same problem to an actual network. This is the toy model of Elhage et&nbsp;al., exactly as published<a href="#ref1"><sup>[1]</sup></a>: an autoencoder with a bottleneck, 18 parameters in total.</p>
 
   <figure class="widget">
@@ -409,7 +410,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
   <figure class="widget machine" id="w-toymodel">
     <div class="w-head">
       <span class="w-title">The toy model, training live</span>
-      <span class="who">fresh model — same recipe as the machine</span>
+      <span class="who">fresh model — same recipe as the model</span>
       <span class="ind"><i></i><b>—</b></span>
       <div class="ctrl">
         <div class="toggle"><button class="b-lin">Linear</button><button class="b-relu on">+ ReLU</button></div>
@@ -438,7 +439,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 
 <!-- ============ 3. SPARSITY ============ -->
 <section id="sparsity">
-  <h2><span class="secno">3.</span>The sparsity dial</h2>
+  <h2><span class="secno">3.</span>Sparsity</h2>
   <p>The noise gate has exactly one weakness: it deletes only <em>small</em> interference. When two overlapping features fire on the same input their crosstalk is large, it clears the threshold, and the output is corrupted. Everything therefore depends on collisions being rare, and collisions are rare precisely when features are <em class="term">sparse</em>.</p>
   <p>Sparsity is the ordinary condition of language data. Of those 34 million features Anthropic pulled out of a production model, nearly every one is silent in any given sentence; “Korean text” and “HTTP request” and “academic citation” almost never turn up together. Rarity is the resource superposition spends, and the slider below sets how much of it the model gets.</p>
   <p>This is the §2 model with the importances flattened, so no feature can win on privilege alone. The slider changes one number: how often features are active. <b>Scrub it slowly from left to right.</b> Training never stops, so the model re-solves the problem live against whatever data you hand it.</p>
@@ -446,7 +447,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
   <figure class="widget machine" id="w-sparsity">
     <div class="w-head">
       <span class="w-title">Sparsity controls the geometry</span>
-      <span class="who">sibling of the machine — equal importance</span>
+      <span class="who">sibling of the model — equal importance</span>
       <span class="ind"><i></i><b>LIVE</b></span>
       <div class="ctrl"><span>dense</span><input type="range" min="0" max="1" step="0.005" value="0"><span>sparse</span><button class="btn b-re">↻</button></div>
     </div>
@@ -473,7 +474,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 
 <!-- ============ 4. GEOMETRY ============ -->
 <section id="geometry">
-  <h2><span class="secno">4.</span>The network rediscovers geometry</h2>
+  <h2><span class="secno">4.</span>Feature geometry</h2>
   <p>A pentagon should bother you. Gradient descent has no taste, and nothing in the loss function asks for a regular figure; it minimizes squared error and stops. Add a dimension and the coincidence turns into a pattern. Below is the same model with <b>eight features in three dimensions</b>, shown two ways — the arrows themselves, which you can rotate, and a quantity Elhage et&nbsp;al. call <em class="term">feature dimensionality</em>:</p>
   <p style="text-align:center" class="math">D<sub>i</sub> = ‖W<sub>i</sub>‖² / Σ<sub>j</sub> (Ŵ<sub>i</sub>·W<sub>j</sub>)²</p>
   <p>Read <span class="math">D<sub>i</sub></span> as how much of a dimension feature i gets to itself. A private, untouched axis gives <span class="math">D=1</span>; sharing an axis with one antipodal partner gives exactly <span class="math">½</span>; a dropped feature gives 0.</p>
@@ -509,12 +510,12 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 
 <!-- ============ 5. POLYSEMANTICITY ============ -->
 <section id="poly">
-  <h2><span class="secno">5.</span>Polysemanticity is the bill</h2>
+  <h2><span class="secno">5.</span>Polysemanticity</h2>
   <p>Now the mystery from §0 pays off. Five feature arrows splay around a circle; a neuron is one axis through that circle; so ask what a single neuron responds to.</p>
-  <p>Below is <b>the machine from the top of the page</b>, the same network you fired concepts into, trained at high sparsity into §3's pentagon and then frozen. Each panel shows one hidden neuron's weight on every feature. (It is also the specimen in the margin map, if your screen is wide enough to show one.)</p>
+  <p>Below is <b>the model from the top of the page</b>, the same network you fired concepts into, trained at high sparsity into §3's pentagon and then frozen. Each panel shows one hidden neuron's weight on every feature. (It is also the specimen in the margin map, if your screen is wide enough to show one.)</p>
 
   <figure class="widget machine" id="w-poly">
-    <div class="w-head"><span class="w-title">What each neuron “means”</span><span class="who m">⬡ the machine itself</span><span class="readout r-prog">—</span></div>
+    <div class="w-head"><span class="w-title">What each neuron “means”</span><span class="who m">⬡ the model itself</span><span class="readout r-prog">—</span></div>
     <div class="w-body"><canvas></canvas></div>
     <figcaption>Every neuron reads a weighted mix of nearly every feature — positive on some, negative on others. Neither neuron <em>means</em> anything by itself. The features are perfectly recoverable, but only as directions cutting diagonally across both neurons.</figcaption>
   </figure>
@@ -527,11 +528,11 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 
 <!-- ============ 6. SAE ============ -->
 <section id="sae">
-  <h2><span class="secno">6.</span>Training the decoder ring</h2>
+  <h2><span class="secno">6.</span>Sparse autoencoders</h2>
   <p>State the inversion problem in full. You are handed the hidden activations <span class="math">h</span>, two numbers per input, the superposed mush, and asked for the original features back. You do not know how many features there are. You do not know where they point. You have no answer key.</p>
   <p>The way in is <b>sparsity</b>, the same property that made superposition possible. If the true features are sparse, the right explanation of any single activation needs only a few ingredients, so the sparsest accurate explanation is probably the true one. Hence the <em class="term">sparse autoencoder</em><a href="#ref2"><sup>[2]</sup></a><a href="#ref3"><sup>[3]</sup></a>. Learn an overcomplete dictionary of candidate directions, ten here for at most six real features, rebuild each activation out of dictionary atoms, and charge a penalty of strength <b>λ</b> for every atom an explanation uses.</p>
   <details class="primer">
-    <summary>Primer: autoencoders, dictionaries, and why an L1 penalty forces sparsity <span class="gist">— the machinery of §6</span></summary>
+    <summary>Primer: autoencoders, dictionaries, and why an L1 penalty forces sparsity <span class="gist">— the parts list for §6</span></summary>
     <div class="p-body">
       <p>An <b>autoencoder</b> is a network trained to output its own input — pointless, except you constrain the middle, and the constraint forces it to learn structure. The toy model itself was one (constraint: only 2 dimensions). The <b>sparse</b> autoencoder flips the constraint: the middle layer is <em>bigger</em> than the input (10 slots for 2 numbers — an “overcomplete dictionary”), but it's penalized for having many slots active at once.</p>
       <p>That penalty, <b>λ × (sum of activations)</b>, is the L1 penalty. Why does it force <em>zeros</em>, rather than just shrinking everything a bit? Because L1 charges the same rate for the first unit of activation as for the last — so the cheapest way to pay less is to switch slots off entirely. (A squared penalty would charge almost nothing near zero, so nothing would ever quite reach it.) Crank λ and slots start dying; that's exactly what you'll see in the lab below.</p>
@@ -544,7 +545,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
   <figure class="widget machine" id="w-sae">
     <div class="w-head">
       <span class="w-title">Sparse autoencoder vs. ground truth</span>
-      <span class="who m">⬡ reading the machine's activations</span>
+      <span class="who m">⬡ reading the model's activations</span>
       <span class="ind"><i></i><b>—</b></span>
       <div class="ctrl"><span>λ low</span><input type="range" min="0" max="1" step="0.005" value="0.78"><span>high</span><span class="readout r-lam">—</span><button class="btn b-re">Reset SAE</button></div>
     </div>
@@ -612,7 +613,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
     <span class="ok">✓</span> antipodal-pair onset, then 5-in-2 pentagon, as sparsity rises (§3)&ensp;
     <span class="ok">✓</span> feature dimensionality sticks at 1, ½, 3/8 — square antiprism at 8-in-3 (§4)&ensp;
     <span class="ok">✓</span> SAE recovery of ground-truth directions, with dead-atom and shattering regimes (§6)</p>
-  <p><b>Design rules.</b> The page is built on a two-world system. <em>Light paper is the human world</em>: narration, captions, and the one experiment you run with your own hands (§1). <em>Dark panels are the machine's world</em>: every figure in which a network is computing renders as an instrument looking into that world — the same darkness as the opening scene, because it is the same place. Saturated color is reserved for feature identity alone (the six features keep their colors from the first pixel to the last); the interface speaks in ink and structure. The serif voice narrates; the monospace voice belongs to the instruments. And inside the figures, nothing animates for decoration: if something moves, glows, or changes size, it encodes a quantity — loss falling, a weight updating, signal flowing, a dictionary atom dying. The opening scene's drifting words are the article's counting argument made spatial; the gentle perspective shift exists only to make the model's world feel inhabited rather than illustrated. That is the whole budget for atmosphere.</p>
+  <p><b>Design rules.</b> The page is built on a two-world system. <em>Light paper is the human world</em>: narration, captions, and the one experiment you run with your own hands (§1). <em>Dark panels are the model's world</em>: every figure in which a network is computing renders as an instrument looking into that world — the same darkness as the opening scene, because it is the same place. Saturated color is reserved for feature identity alone (the six features keep their colors from the first pixel to the last); the interface speaks in ink and structure. The serif voice narrates; the monospace voice belongs to the instruments. And inside the figures, nothing animates for decoration: if something moves, glows, or changes size, it encodes a quantity — loss falling, a weight updating, signal flowing, a dictionary atom dying. The opening scene's drifting words are the article's counting argument made spatial; the gentle perspective shift exists only to make the model's world feel inhabited rather than illustrated. That is the whole budget for atmosphere.</p>
   <div class="fin">···</div>
 </footer>
 
@@ -771,9 +772,9 @@ const REALFEATURES=[{"id":"#650","idx":650,"label":"economic weakness","url":"ht
 // ---------- shared ----------
 const css=getComputedStyle(document.documentElement);
 const FC=[...Array(8)].map((_,i)=>css.getPropertyValue(`--f${i}`).trim());
-const INK='#191813',INK2='#8d887c',RULE='#e2ddcf',ACC='#191813',GOOD='#19a77f';
+const INK='#1b211c',INK2='#78857a',RULE='#d4d9d0',ACC='#1b211c',GOOD='#2e7d5b';
 // machine-world canvas palette (dark instrument panels)
-const M={ink:'#e8e4d8',mut:'#8fa097',rule:'#2a3034',grid:'#20262a'};
+const M={ink:'#eef0ea',mut:'#93a396',rule:'#38443b',grid:'#242e27'};
 const SANS='11px "IBM Plex Mono",ui-monospace,Menlo,monospace';
 
 function setupCanvas(c,w,h){
@@ -974,7 +975,7 @@ const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']]
   function strip(u){
     sx.clearRect(0,0,250,96);sx.font=SANS;sx.textAlign='center';
     REGIONS.forEach(([a,b,t],i)=>{
-      sx.fillStyle=['#1c2225','#222a2e','#293338','#313d43'][i];
+      sx.fillStyle=['#232d26','#2a362d','#323f35','#3b4a3e'][i];
       sx.fillRect(8+a*234,14,(b-a)*234,30);
       sx.fillStyle=M.mut;sx.fillText(t,8+(a+b)/2*234,34);
     });
@@ -1171,9 +1172,9 @@ BASE.tickTrain=()=>{ if(BASE.done)return;
     for(let j=0;j<K;j++){
       const a=sae.atom(j,SW),dead=sae.usage[j]<.01;if(!dead&&!abl[j])live++;
       if(abl[j]){
-        P.arrow(a.map(v=>v*.82),'#ff6b4a',{lw:2,alpha:.9,dash:[5,3]});
+        P.arrow(a.map(v=>v*.82),'#ff8a63',{lw:2,alpha:.9,dash:[5,3]});
         const[X,Y]=P.px([a[0]*.86,a[1]*.86]);
-        ctx.strokeStyle='#ff6b4a';ctx.lineWidth=2;
+        ctx.strokeStyle='#ff8a63';ctx.lineWidth=2;
         ctx.beginPath();ctx.moveTo(X-4,Y-4);ctx.lineTo(X+4,Y+4);ctx.moveTo(X+4,Y-4);ctx.lineTo(X-4,Y+4);ctx.stroke();
       }else P.arrow(a.map(v=>v*.82),dead?M.mut:M.ink,{lw:dead?1.5:2.5,alpha:dead?.45:.95,dash:dead?[4,4]:null});
     }
@@ -1191,7 +1192,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
 (function(){
   const root=$('#machine');if(!root)return;
   const stage=root.querySelector('.scene-stage');
-  const BG='#14181a',RL='#2a3034',TX='#8fa097',TRK='#232a2e',TICK='#e8e4d8';
+  const BG='#1e2620',RL='#38443b',TX='#93a396',TRK='#2b352e',TICK='#eef0ea';
   const S=280,OW=272;
   const ch=root.querySelector('.c-ch'),cx=setupCanvas(ch,S,S);
   const co=root.querySelector('.c-out'),ox=setupCanvas(co,OW,S);
@@ -1213,7 +1214,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
     if(demo){endDemo();subEl.textContent=''}
     const i=+b.dataset.i;manual.has(i)?manual.delete(i):manual.add(i);b.classList.toggle('on');pulses=[]});
   root.querySelector('.b-clear').onclick=()=>{manual.clear();lamps.forEach(b=>b.classList.remove('on'))};
-  // --- word field (the model's world, drifting behind the machine) ---
+  // --- word field (the model's world, drifting behind the model) ---
   const wf=root.querySelector('.wordfield'),wx=wf.getContext('2d');
   let WW=0,WH=0,dpr=1,words=[];
   function sizeWF(){
@@ -1251,7 +1252,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
         wx.fillStyle=FC[o.f];wx.globalAlpha=Math.min(1,.34+.3*o.z+.6*a);
         wx.font=(9.5+7*o.z+6*a)+'px -apple-system,sans-serif';
         if(a>.12){wx.shadowColor=FC[o.f];wx.shadowBlur=12}}
-      else{wx.fillStyle='#8d887c';wx.globalAlpha=.07+.13*o.z}
+      else{wx.fillStyle='#7d8c80';wx.globalAlpha=.07+.13*o.z}
       wx.fillText(o.w,px,py);wx.shadowBlur=0;
     }
     wx.globalAlpha=1;
@@ -1335,10 +1336,10 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
       ox.beginPath();ox.moveTo(tx2,y0-3);ox.lineTo(tx2,y0+15);ox.stroke();
       if(d>.28){ox.fillStyle='#ff6b4a';ox.beginPath();ox.arc(254,y0+6,3.5,0,7);ox.fill()}
     }
-    if(!BASE.done){errEl.textContent='assembling the machine… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
-    else if(lost){errEl.textContent='✗ lost — the machine never stored this concept';errEl.style.color='#ff6b4a'}
-    else if(worst>.28){errEl.textContent='✗ crosstalk — concepts collided';errEl.style.color='#ff6b4a'}
-    else{errEl.textContent='✓ clean readout';errEl.style.color='#5ec99a'}
+    if(!BASE.done){errEl.textContent='assembling the model… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
+    else if(lost){errEl.textContent='✗ lost — the model never stored this concept';errEl.style.color='#ff8a63'}
+    else if(worst>.28){errEl.textContent='✗ crosstalk — concepts collided';errEl.style.color='#ff8a63'}
+    else{errEl.textContent='✓ clean readout';errEl.style.color='#a9c79a'}
   }};
   window.__dbg.hero=()=>({t0ms,si,demo,pulses:pulses.length,words:words.length,skipShown:skipB.style.display!=='none'});
   register(root,w);
@@ -1361,7 +1362,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
     ds.forEach(d=>d.open=open);pa.textContent=open?'collapse all':'expand all';
   };
   const map=document.querySelector('#map');if(!map)return;
-  // specimen thumbnail: the machine (BASE), animated only while it trains, then frozen.
+  // specimen thumbnail: the model (BASE), animated only while it trains, then frozen.
   // The map also drives BASE training so §5/§6 are ready even if the reader skips the hero.
   const scv=map.querySelector('canvas'),sx=setupCanvas(scv,118,118),sst=map.querySelector('.st');
   function drawSpec(){
@@ -1384,7 +1385,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
     if(BASE.done){sst.textContent='trained · frozen';specDone=true}
     else sst.textContent='training '+Math.round(100*BASE.model.steps/8000)+'%';
   }});
-  // the map is redundant (and illegible) while the machine itself fills the screen
+  // the map is redundant (and illegible) while the model itself fills the screen
   const heroSec=document.querySelector('#machine');
   if(heroSec)new IntersectionObserver(e=>map.classList.toggle('off',e[0].isIntersecting),{threshold:.25}).observe(heroSec);
   const links=[...map.querySelectorAll('nav a')];
