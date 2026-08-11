@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>More Features Than Neurons — An Interactive Tour of Superposition</title>
+<meta name="description" content="An interactive explainer: how neural networks cram more concepts into fewer dimensions, why that makes them hard to read, and how sparse autoencoders unscramble the mess. Every experiment runs live in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314181a'/%3E%3Cg stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='16' y1='16' x2='16' y2='5' stroke='%23e0a300'/%3E%3Cline x1='16' y1='16' x2='26.5' y2='12.6' stroke='%232a7de1'/%3E%3Cline x1='16' y1='16' x2='22.5' y2='24.9' stroke='%23e0532f'/%3E%3Cline x1='16' y1='16' x2='9.5' y2='24.9' stroke='%2319a77f'/%3E%3Cline x1='16' y1='16' x2='5.5' y2='12.6' stroke='%238e5bd0'/%3E%3C/g%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:title" content="More Features Than Neurons">
+<meta property="og:description" content="Why single neurons mean several things at once, and how sparsity both causes the problem and cures it. Every experiment trains live in your browser.">
+<meta property="og:url" content="https://code259.github.io/more-features-than-neurons/">
+<meta property="og:image" content="https://code259.github.io/more-features-than-neurons/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="More Features Than Neurons">
+<meta name="twitter:description" content="Why single neurons mean several things at once, and how sparsity both causes the problem and cures it. Every experiment trains live in your browser.">
+<meta name="twitter:image" content="https://code259.github.io/more-features-than-neurons/assets/og.png">
+<!--CSS--><style>
+/* ============ TWO WORLDS ============
+   Light paper = the human world: narration, captions, the hand-played game.
+   Dark panels = the machine world: anything a network computes.
+   Saturated color is reserved for feature identity — UI speaks in ink and structure.
+   Serif (Newsreader) = the narrator's voice. Mono (IBM Plex) = the instrument's voice. */
+
+@font-face{font-family:'Newsreader';font-style:normal;font-weight:200 800;font-display:swap;src:url(fonts/newsreader.woff2) format('woff2')}
+@font-face{font-family:'Newsreader';font-style:italic;font-weight:200 800;font-display:swap;src:url(fonts/newsreader-italic.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/plexmono-400.woff2) format('woff2')}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/plexmono-600.woff2) format('woff2')}
+
+:root{
+  /* the human world */
+  --bg:#f7f5ee; --ink:#191813; --ink2:#5f5a4e; --rule:#e2ddcf; --card:#efece1;
+  /* the machine world */
+  --m-bg:#14181a; --m-card:#1b2124; --m-rule:#2a3034; --m-text:#8fa097; --m-bright:#e8e4d8;
+  /* semantic only */
+  --live:#5ec99a; --good:#19a77f; --bad:#d04f2e; --bad-d:#ff6b4a;
+  --accent:#191813;
+  /* feature identity — the only saturated colors on the page */
+  --f0:#e0a300; --f1:#2a7de1; --f2:#e0532f; --f3:#19a77f; --f4:#8e5bd0; --f5:#d14a8e; --f6:#3bb8c9; --f7:#8a7a5c;
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --mono:'IBM Plex Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  --sans:var(--mono);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:20px;line-height:1.62;font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+header.masthead{max-width:680px;margin:0 auto;padding:72px 20px 8px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+h1{font-size:46px;line-height:1.1;margin:10px 0 14px;font-weight:600;letter-spacing:-.015em}
+.dek{font-size:22px;line-height:1.5;color:var(--ink2);margin:0 0 26px;font-style:italic}
+.byline{font-family:var(--mono);font-size:12.5px;color:var(--ink2);border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);padding:10px 0;display:flex;gap:18px;flex-wrap:wrap}
+.byline b{color:var(--ink);font-weight:600}
+main{max-width:680px;margin:0 auto;padding:0 20px 80px}
+section{margin-top:60px}
+h2{font-size:31px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;font-weight:600}
+h2 .secno{font-family:var(--mono);font-size:.5em;font-weight:600;letter-spacing:.12em;color:var(--ink2);vertical-align:.45em;margin-right:10px}
+h3{font-size:21px;margin:30px 0 6px;font-weight:600}
+p{margin:14px 0}
+a{color:var(--ink);text-decoration-color:#b9b2a0;text-underline-offset:2.5px}
+a:hover{text-decoration-color:var(--ink)}
+em.term{font-style:normal;background:linear-gradient(transparent 68%,#e9e2c8 68%);padding:0 2px}
+.math{font-style:italic;white-space:nowrap}
+.math sup,.math sub{font-size:.72em}
+mark{background:#f0e9cd;padding:0 2px;border-radius:2px}
+.chip{display:inline-block;font-family:var(--mono);font-size:.66em;font-weight:600;color:#fff;padding:1px 8px 2px;border-radius:99px;vertical-align:1px;letter-spacing:.02em}
+.takeaway{background:var(--card);border-left:3px solid var(--ink);padding:14px 18px;margin:26px 0;font-size:18.5px}
+.takeaway b{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:4px;font-weight:600}
+.aside{font-size:16.5px;color:var(--ink2);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:12px 2px;margin:24px 0}
+/* ---------- widgets: paper instruments ---------- */
+figure.widget{margin:30px -40px;background:#fffdf6;border:1px solid var(--rule);border-radius:10px;font-family:var(--mono);overflow:hidden}
+@media(max-width:800px){figure.widget{margin:30px -10px}}
+.w-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 18px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+.w-title{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.w-body{padding:16px 18px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.w-col{display:flex;flex-direction:column;gap:8px;align-items:center}
+.w-col .lbl{font-size:11px;color:var(--ink2);font-weight:400;letter-spacing:.01em}
+figcaption{font-family:var(--serif);font-size:16px;color:var(--ink2);padding:12px 18px 16px;border-top:1px dashed var(--rule);line-height:1.5;background:#fffdf6}
+canvas{display:block;touch-action:none;border-radius:6px}
+canvas.grabbable{cursor:grab}
+.btn{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;padding:7px 13px;border-radius:6px;border:1px solid #c9c3b2;background:transparent;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.primary:hover{background:#000}
+.btn:disabled{opacity:.45;cursor:default}
+.ctrl{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink2);font-weight:400}
+input[type=range]{accent-color:var(--ink);width:170px}
+.scorebox{display:flex;gap:14px}
+.score{background:var(--card);border-radius:8px;padding:8px 14px;min-width:108px;text-align:center}
+.score .v{font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.score .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+.score.win .v{color:var(--good)}
+.toggle{display:flex;border:1px solid #c9c3b2;border-radius:6px;overflow:hidden}
+.toggle button{font-family:var(--mono);font-size:12px;font-weight:600;border:0;background:transparent;color:var(--ink2);padding:7px 13px;cursor:pointer}
+.toggle button.on{background:var(--ink);color:var(--bg)}
+.readout{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--ink2);align-items:center}
+.legend .sw{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:-1px}
+/* live / frozen indicator */
+.ind{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--ink2)}
+.ind i{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block}
+.ind.frozen i{background:#7a766a}
+/* ---------- machine-world figures: dark instrument panels ---------- */
+figure.widget.machine{border-color:#23282b;background:var(--m-bg)}
+.machine .w-head{background:var(--m-bg);border-bottom:1px solid var(--m-rule)}
+.machine .w-title{color:var(--m-text)}
+.machine .readout{color:var(--m-text)}
+.machine .readout b{color:var(--m-bright)}
+.machine .readout a{color:var(--m-bright);text-decoration-color:#5a655f}
+.machine .w-body{background:var(--m-bg)}
+.machine .w-col .lbl{color:var(--m-text)}
+.machine .btn{border-color:#3a4348;color:var(--m-text);background:transparent}
+.machine .btn:hover{border-color:var(--m-bright);color:var(--m-bright)}
+.machine .toggle{border-color:#3a4348}
+.machine .toggle button{background:transparent;color:var(--m-text)}
+.machine .toggle button.on{background:var(--m-bright);color:var(--m-bg)}
+.machine .ctrl{color:var(--m-text)}
+.machine input[type=range]{accent-color:var(--m-bright)}
+.machine .score{background:var(--m-card)}
+.machine .score .v{color:var(--m-bright)}
+.machine .score .k{color:var(--m-text)}
+.machine .score.win .v{color:var(--live)}
+.machine .ind{color:var(--m-text)}
+.machine .who{background:var(--m-card);border-color:var(--m-rule);color:var(--m-text)}
+.machine .who.m{color:var(--m-bright);border-color:#4a5358}
+.machine figcaption{background:#fffdf6}
+/* widget provenance badge: the machine itself vs. a sibling experiment */
+.who{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.who.m{color:var(--ink);border-color:#aaa494}
+/* record cards (real-model activation records) */
+.snips{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 18px}
+@media(max-width:620px){.snips{grid-template-columns:1fr}}
+.snip{background:var(--card);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#46423a}
+.snip .tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:6px}
+.machine .snips{background:var(--m-bg)}
+.machine .snip{background:var(--m-card);color:var(--m-text)}
+.machine .snip .tag{color:#6d7a72}
+.snip .tk{border-radius:3px;padding:0 1px;background:rgba(232,228,216,calc(var(--a)*.35));cursor:default}
+.snip .tk.hi{background:rgba(232,228,216,calc(.3 + var(--a)*.62));color:#14181a}
+/* try line: one concrete action per instrument */
+.try{display:flex;gap:10px;align-items:baseline;padding:10px 18px;border-top:1px dashed var(--rule);font-family:var(--serif);font-size:15.5px;color:var(--ink2);background:#fffdf6}
+.try b{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--ink);border:1px solid #c9c3b2;border-radius:99px;padding:2px 8px;flex-shrink:0}
+/* reproduction checklist */
+.repro{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 18px;font-family:var(--mono);font-size:13px;line-height:2;color:var(--ink2);margin:16px 0}
+.repro b{color:var(--ink);font-weight:600}
+.repro .ok{color:var(--good);font-weight:600}
+/* model diagram */
+.diagram{display:flex;justify-content:center;padding:18px;background:#fffdf6}
+.diagram svg{max-width:100%;height:auto}
+/* footer */
+footer{border-top:1px solid var(--rule);margin-top:70px;padding:26px 0;font-size:15.5px;color:var(--ink2)}
+footer h3{font-size:16px}
+ol.refs{padding-left:20px;font-size:15px;line-height:1.55}
+ol.refs li{margin-bottom:6px}
+.fin{text-align:center;color:#c9c3b2;font-size:24px;letter-spacing:.4em;margin:50px 0 0}
+@media(max-width:640px){h1{font-size:34px}.dek{font-size:19px}body{font-size:18px}}
+/* hero machine */
+.lamps{display:flex;flex-direction:column;gap:7px;min-width:130px}
+.lamps button{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;cursor:pointer;transition:all .12s}
+.lamps button i{width:12px;height:12px;border-radius:50%;display:inline-block;opacity:.45;transition:all .12s}
+.lamps button:hover{border-color:var(--ink)}
+.lamps button.on{color:var(--ink);border-color:var(--ink);background:#fff}
+.lamps button.on i{opacity:1;box-shadow:0 0 7px 1px currentColor}
+/* scroll reveal */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease}
+.reveal.in{opacity:1;transform:none}
+/* story map: the specimen + the argument, always in view (wide screens) */
+#map{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:9;width:170px;font-family:var(--mono);transition:opacity .45s}
+#map.off{opacity:0;pointer-events:none}
+#map .spec-card{display:block;background:var(--m-bg);border:1px solid #23282b;border-radius:8px;padding:9px 8px 7px;text-align:center;text-decoration:none;margin-bottom:10px}
+#map .spec-card:hover{border-color:var(--m-text)}
+#map .spec-card canvas{margin:0 auto}
+#map .spec-card .k{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--m-bright);display:block;margin-top:5px}
+#map .spec-card .st{font-size:10px;font-weight:600;color:var(--live);display:block;font-variant-numeric:tabular-nums}
+#map .spec-card .cap{font-size:10px;color:var(--m-text);display:block;line-height:1.35;margin-top:3px;font-family:var(--serif);font-style:italic;font-size:11.5px}
+#map nav{display:flex;flex-direction:column;gap:3px}
+#map nav a{font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--ink2);text-decoration:none;padding:3px 8px 3px 14px;border-left:2px solid var(--rule);opacity:.7;transition:color .15s,opacity .15s}
+#map nav a:hover{color:var(--ink);opacity:1}
+#map nav a.cur{color:var(--ink);border-left-color:var(--ink);opacity:1}
+#map nav a .q{display:none;font-weight:400;font-size:12px;color:var(--ink2);line-height:1.35;margin-top:2px;font-family:var(--serif);font-style:italic}
+#map nav a.cur .q{display:block}
+@media(max-width:1150px){#map{display:none}}
+/* ---------- immersive scene ---------- */
+.scene{position:relative;margin-top:0;min-height:max(740px,100vh);background:var(--m-bg);overflow:hidden;display:flex}
+.scene .wordfield{position:absolute;inset:0;width:100%;height:100%;border-radius:0}
+.scene-inner{position:relative;z-index:2;width:100%;max-width:1060px;margin:0 auto;padding:34px 28px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+.scene-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+.scene-title .kicker{color:var(--m-text)}
+.scene-title h1{color:var(--m-bright);font-size:44px;margin:8px 0 10px;max-width:560px;text-shadow:0 2px 30px rgba(0,0,0,.6)}
+.scene-dek{font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.55;color:var(--m-text);max-width:470px;margin:0}
+.scene-dek b{color:var(--m-bright)}
+.scene-hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.scene-hud .readout{color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:99px;padding:6px 14px;font-weight:600;font-family:var(--mono);font-size:11.5px}
+.btn.dark{background:var(--m-card);border-color:var(--m-rule);color:var(--m-text)}
+.btn.dark:hover{border-color:var(--m-bright);color:var(--m-bright)}
+.scene-stage{display:flex;gap:26px;align-items:center;justify-content:center;flex-wrap:wrap;will-change:transform;transform-style:preserve-3d}
+.scene-stage .w-col{gap:10px}
+.scene-stage .lbl{color:var(--m-text)}
+.scene-stage canvas{box-shadow:0 18px 60px rgba(0,0,0,.55);border:1px solid #23282b;border-radius:10px}
+.scene-stage .lamps{display:flex;flex-direction:column;gap:8px;min-width:140px}
+.scene-stage .lamps button{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:8px;padding:9px 14px;cursor:pointer;transition:all .12s}
+.scene-stage .lamps button i{width:12px;height:12px;border-radius:50%;display:inline-block;opacity:.45;transition:all .12s}
+.scene-stage .lamps button:hover{border-color:var(--m-bright);color:var(--m-bright)}
+.scene-stage .lamps button.on{background:#232a2e;border-color:var(--m-bright);color:var(--m-bright)}
+.scene-stage .lamps button.lit i{opacity:1;box-shadow:0 0 12px 2px currentColor}
+.scene-stage .subtitle{flex-basis:100%;text-align:center;font-family:var(--serif);font-size:17px;font-weight:400;font-style:italic;color:var(--m-bright);min-height:26px;padding:4px 10px;text-shadow:0 1px 12px rgba(0,0,0,.7)}
+.scroll-cue{align-self:center;text-align:center;font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--m-text);padding-bottom:6px;transition:opacity .5s}
+.scroll-cue .chev{display:block;font-size:20px;animation:bob 1.6s ease-in-out infinite;color:var(--m-bright)}
+.scroll-cue.hide{opacity:0}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+@media (prefers-reduced-motion:reduce){.scroll-cue .chev{animation:none}.scene-stage{transform:none!important}}
+@media(max-width:760px){.scene-title h1{font-size:32px}.scene-dek{font-size:16px}.scene-inner{padding:24px 16px 14px}.scene-hud{justify-content:flex-start}}
+/* slim masthead after scene */
+.masthead.slim{max-width:680px;margin:0 auto;padding:34px 20px 0}
+.bridge{font-size:20px;line-height:1.6;font-style:italic;color:var(--ink2);margin:22px 0 0}
+.bridge b{color:var(--ink)}
+/* primer cards */
+details.primer{background:var(--card);border:1px solid var(--rule);border-radius:8px;margin:22px 0;font-size:17px;line-height:1.55}
+details.primer summary{cursor:pointer;font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.04em;color:var(--ink);padding:11px 16px;list-style:none;display:flex;gap:9px;align-items:baseline}
+details.primer summary::-webkit-details-marker{display:none}
+details.primer summary::before{content:'⊕';font-size:15px;flex-shrink:0;transition:transform .2s}
+details.primer[open] summary::before{content:'⊖'}
+details.primer summary .gist{font-weight:400;color:var(--ink2);font-family:var(--serif);font-style:italic;font-size:15px;letter-spacing:0}
+details.primer .p-body{padding:2px 18px 14px;color:#3d3a32;border-top:1px dashed var(--rule)}
+details.primer .p-body p{margin:10px 0}
+details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
+.linklike{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;text-decoration-color:#b9b2a0;cursor:pointer}
+</style><!--/CSS-->
+</head>
+<body>
+
+
+
+<aside id="map" class="off" aria-label="story map">
+  <a class="spec-card" href="#machine" title="back to the machine">
+    <canvas width="118" height="118"></canvas>
+    <span class="k">⬡ the machine</span>
+    <span class="st">—</span>
+    <span class="cap">every section below studies this one network</span>
+  </a>
+  <nav>
+    <a href="#machine">machine<span class="q">Six concepts, two neurons — it works. How?</span></a>
+    <a href="#hook">mystery<span class="q">Real neurons mean many things at once. Why?</span></a>
+    <a href="#game">game<span class="q">Feel the constraint: more features than room.</span></a>
+    <a href="#model">noise gate<span class="q">ReLU + bias delete crosstalk — the license to cram.</span></a>
+    <a href="#sparsity">sparsity<span class="q">Rare features share space almost for free.</span></a>
+    <a href="#geometry">geometry<span class="q">It's sphere packing — neurons are bystanders.</span></a>
+    <a href="#poly">the bill<span class="q">Every neuron axis cuts across many features.</span></a>
+    <a href="#sae">the cure<span class="q">Sparsity, run backwards, un-crams the machine.</span></a>
+    <a href="#epilogue">so what<span class="q">Interpretability is the decompression problem.</span></a>
+  </nav>
+</aside>
+
+<!-- ============ FLAGSHIP: THE MACHINE (immersive scene) ============ -->
+<section id="machine" class="scene">
+  <canvas class="wordfield" aria-hidden="true"></canvas>
+  <div class="scene-inner">
+    <div class="scene-top">
+      <div class="scene-title">
+        <div class="kicker">An interactive explainer</div>
+        <h1>More Features Than Neurons</h1>
+        <p class="scene-dek">You are standing inside a neural network. Drifting around you is everything it has to remember. It has <b>two neurons</b> to do that with, and it manages. This page is about how.</p>
+      </div>
+      <div class="scene-hud">
+        <span class="readout r-err">—</span>
+        <button class="btn dark b-skip">skip intro</button>
+        <button class="btn dark b-clear">clear</button>
+      </div>
+    </div>
+    <div class="scene-stage" id="w-hero">
+      <div class="w-col">
+        <div class="lamps">
+          <button data-i="0"><i style="background:var(--f0)"></i>citations</button>
+          <button data-i="1"><i style="background:var(--f1)"></i>dialogue</button>
+          <button data-i="2"><i style="background:var(--f2)"></i>HTTP</button>
+          <button data-i="3"><i style="background:var(--f3)"></i>Korean</button>
+          <button data-i="4"><i style="background:var(--f4)"></i>code</button>
+          <button data-i="5"><i style="background:var(--f5)"></i>weather</button>
+        </div>
+        <span class="lbl" style="max-width:150px;text-align:center">six concepts — <b>click to fire</b> (try two at once)</span>
+      </div>
+      <div class="w-col"><canvas class="c-ch"></canvas><span class="lbl">…crammed into 2 neurons…</span></div>
+      <div class="w-col"><canvas class="c-out"></canvas><span class="lbl" style="max-width:280px;text-align:center">…and read back out (tick = truth, bar = readout)</span></div>
+      <div class="subtitle">—</div>
+    </div>
+    <div class="scroll-cue">scroll — we take the machine apart<span class="chev">⌄</span></div>
+  </div>
+</section>
+
+<main>
+
+
+
+<div class="masthead slim">
+  <div class="byline">
+    <span><b>Nikhil Maturi</b></span>
+    <span>July 2026</span>
+    <span>VISxAI 2026 submission</span>
+    <span>≈ 15 min + play time</span>
+    <span>no ML background needed — ⊕ primer cards fill in prerequisites as they come up (<button id="primer-all" class="linklike">expand all</button>)</span>
+  </div>
+  <p class="bridge">That dark room is a complete neural network. Eighteen numbers, six concepts, two neurons, and it trained itself in your browser in the second it took you to scroll past. The rest of this page takes it apart: how the cramming works, when it breaks, and how to run it backwards. If you noticed the machine refusing to store <b>weather</b>, that is §3.</p>
+</div>
+
+<!-- ============ 0. HOOK ============ -->
+<section id="hook">
+  <h2><span class="secno">0.</span>The neuron that meant too much</h2>
+  <p>Open a trained language model and look at one neuron. A neuron here is a single number in a single layer: it takes some value on every input, large for a few, zero for most. If networks were built the way we would build them, that number would mean something. One neuron for quotation marks. One for wetness. One for the Golden Gate Bridge.</p>
+  <p>They are not built that way. Below are four neurons from GPT-2, each shown with the text that excites it most, taken verbatim from OpenAI's public neuron dataset.<a href="#ref5"><sup>[5]</sup></a> Brightness is the measured activation: the brighter the token, the harder that neuron fired. Read the four records and try to finish the sentence <em>“this neuron detects&nbsp;___.”</em></p>
+
+  <figure class="widget machine" id="w-hook">
+    <div class="w-head">
+      <span class="w-title">Raw neurons of GPT-2</span>
+      <span class="who m">real model — verbatim records</span>
+      <div class="ctrl"><button class="btn n-prev">←</button><span class="readout n-name">—</span><button class="btn n-next">→</button></div>
+    </div>
+    <div class="snips"></div>
+    <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
+      <span class="readout n-val">hover a lit token</span>
+      <span class="readout">GPT-2 XL · OpenAI neuron dataset · top records</span>
+    </div>
+    <div class="try"><b>TRY</b><span>Hover the lit tokens, then flip to the next neuron and try the sentence again. It doesn't get easier.</span></div>
+    <figcaption>Neuron 45 of layer 10 fires on surveillance news, a lobster recipe, a platform game, and sawfly larvae. The most famous example of the species, from Bricken et&nbsp;al., fired on academic citations, English dialogue, HTTP requests, and Korean text <a href="#ref2">[2]</a>. Neurons that mean one thing are the exception.</figcaption>
+  </figure>
+
+  <p>Surveillance footage and lobster Newburg. Court citations and graduation parties. Neurons like this are not rare defects; they are what most of the network looks like when you go looking. And the network is neither broken nor sloppy. It is short on space.</p>
+  <p>Count the room. GPT-2 small carries 768 numbers per layer and a vocabulary of 50,257 tokens. Even if the only thing it ever had to record were which token it just read, that is 65 tokens competing for every dimension. Tokens are the easy part. A model also tracks who is speaking, what language this is, whether the tone is sarcastic, whether we are inside a quotation, inside a URL, inside a legal citation. When Anthropic ran the best available extraction method over a production model, it came back with 34 million distinct features<a href="#ref3"><sup>[3]</sup></a>. Give each one a private dimension and you need a network thousands of times wider than any that exists.</p>
+  <p>So models don't. They <em class="term">cram</em>: more concepts than dimensions, stored on top of each other, at a cost the rest of this page is about. The practice has a name, <em class="term">superposition</em>, and a theory precise enough to make predictions — Elhage et&nbsp;al., 2022<a href="#ref1"><sup>[1]</sup></a>. The model at the center of that theory has 18 parameters and trains in about a second, which makes the usual way of meeting it, as a PDF of finished figures, a waste of a good experiment.</p>
+  <p>Every claim below is running live on this page instead. You get the first experiment yourself, before any network does: §1 hands you the packing problem directly. §2 adds a single nonlinearity and the rules change. §3 is one dial that reorganizes everything. §4 catches the network doing geometry behind your back. §5 is the bill. §6 is the way out. Knowing what a vector is will carry you the whole way; the ⊕ primers cover the rest as it arrives.</p>
+</section>
+
+<!-- ============ 1. GAME ============ -->
+<section id="game">
+  <h2><span class="secno">1.</span>Try packing it yourself</h2>
+  <p>Strip the network's problem down to its skeleton and it becomes a puzzle you can solve with a mouse. You have <b>six features</b> to store — six concepts the model cares about — and <b>two dimensions</b> to store them in. Each feature is kept as a <em>direction</em>: an arrow in the flat space below, which needs length 1 to count as fully stored. The catch is that arrows interact. Any two that are not perpendicular <em>interfere</em>, so reading one picks up a little of the other, and the score charges you for every bit of it.</p>
+  <p>Two dimensions hold exactly two perpendicular arrows. You have six. Someone has to overlap.</p>
+
+  <details class="primer">
+    <summary>Primer: vectors, directions, and “interference” <span class="gist">— the only math the game needs</span></summary>
+    <div class="p-body">
+      <p>A <b>vector</b> here is just an arrow from the center: a direction plus a length. Storing a feature “as a vector” means: when this feature is active, push the hidden state in this direction; to read it back, measure how far the state extends along that direction.</p>
+      <p>That measuring is the <b>dot product</b>: for arrows <span class="math">a</span> and <span class="math">b</span> it returns (length of a) × (length of b) × cos(angle between). Perpendicular arrows give 0 — reading one picks up none of the other. The smaller the angle between two arrows, the more reading one accidentally reads the other. That spillover is all “interference” means.</p>
+      <p class="p-ref">Deeper: any linear algebra intro; 3Blue1Brown's <em>Essence of Linear Algebra</em>, episodes 1 &amp; 9.</p>
+    </div>
+  </details>
+  <p>One more rule: the six are not equally valuable. <span class="chip" style="background:var(--f0)">F1</span> matters most, <span class="chip" style="background:var(--f5)">F6</span> least, and thicker arrows are worth more. <b>Drag the arrow tips</b> and push the score as low as you can. Then hand the layout to gradient descent, which starts from your arrangement rather than from scratch — whatever it finds, it found by improving on your idea.</p>
+
+  <figure class="widget" id="w-game">
+    <div class="w-head">
+      <span class="w-title">The packing game — you vs. gradient descent</span>
+      <span class="who">no network yet — just you</span>
+      <div class="ctrl"><button class="btn primary b-sgd">Let gradient descent take over</button><button class="btn b-reset">Reset</button></div>
+    </div>
+    <div class="w-body">
+      <div class="w-col"><canvas></canvas><span class="lbl">drag the arrow tips · dashed circle = length 1</span></div>
+      <div class="w-col">
+        <div class="scorebox" style="flex-direction:column">
+          <div class="score"><div class="v s-you">—</div><div class="k">your loss</div></div>
+          <div class="score"><div class="v s-sgd">—</div><div class="k">gradient descent</div></div>
+        </div>
+        <div class="legend" style="max-width:170px">Loss = (under-representation) + (interference between overlapping arrows). Lower is better. Gradient descent starts from <em>your</em> layout.</div>
+      </div>
+    </div>
+    <div class="try"><b>TRY</b><span>Drag the tips. Get below 3.0 if you can. Then press the button and watch what gradient descent does with your best idea.</span></div>
+    <figcaption>The score is the toy model's loss in its analytic form <a href="#ref1">[1]</a>: each feature pays for falling short of length 1, weighted by importance, plus a penalty for every pair of non-perpendicular arrows. Most people sacrifice the unimportant features first, then discover that spreading the overlap around beats clean sacrifice.</figcaption>
+  </figure>
+
+  <p>A minute of dragging turns up both strategies the problem allows. The first is clean sacrifice: give the two most valuable features perfect perpendicular arrows and throw the other four away. Nothing interferes, and four concepts stop existing. The second is the squeeze: wedge the extra arrows into the gaps so that everyone overlaps slightly, everyone pays a little crosstalk, and nobody is dropped.</p>
+  <p>Which one wins is not a matter of taste. It depends on a single property of the data, and the rest of this article hangs on that property.</p>
+  <div class="takeaway"><b>Takeaway</b>Representing more features than you have dimensions forces interference. The network's only real choice is <em>who pays it</em>: drop features cleanly, or overlap them and absorb the crosstalk.</div>
+</section>
+
+<!-- ============ 2. TOY MODEL ============ -->
+<section id="model">
+  <h2><span class="secno">2.</span>A model small enough to hold in your head</h2>
+  <p>Now hand the same problem to an actual network. This is the toy model of Elhage et&nbsp;al., exactly as published<a href="#ref1"><sup>[1]</sup></a>: an autoencoder with a bottleneck, 18 parameters in total.</p>
+
+  <figure class="widget">
+    <div class="diagram">
+      <svg viewBox="0 0 640 150" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11.5">
+        <g fill="#5f5a4e"><text x="60" y="20" text-anchor="middle">input x — 6 features</text><text x="320" y="20" text-anchor="middle">hidden h = Wx — 2 neurons</text><text x="580" y="20" text-anchor="middle">output x′ = ReLU(Wᵀh + b)</text></g>
+        <g>
+          <circle cx="60" cy="40" r="9" fill="var(--f0)"/><circle cx="60" cy="58" r="9" fill="var(--f1)"/><circle cx="60" cy="76" r="9" fill="var(--f2)"/><circle cx="60" cy="94" r="9" fill="var(--f3)"/><circle cx="60" cy="112" r="9" fill="var(--f4)"/><circle cx="60" cy="130" r="9" fill="var(--f5)"/>
+          <circle cx="320" cy="68" r="11" fill="#1c1b18"/><circle cx="320" cy="100" r="11" fill="#1c1b18"/>
+          <circle cx="580" cy="40" r="9" fill="var(--f0)"/><circle cx="580" cy="58" r="9" fill="var(--f1)"/><circle cx="580" cy="76" r="9" fill="var(--f2)"/><circle cx="580" cy="94" r="9" fill="var(--f3)"/><circle cx="580" cy="112" r="9" fill="var(--f4)"/><circle cx="580" cy="130" r="9" fill="var(--f5)"/>
+        </g>
+        <g stroke="#c9c2b2" stroke-width="1">
+          <line x1="75" y1="40" x2="305" y2="66"/><line x1="75" y1="58" x2="305" y2="68"/><line x1="75" y1="76" x2="305" y2="72"/><line x1="75" y1="94" x2="305" y2="96"/><line x1="75" y1="112" x2="305" y2="100"/><line x1="75" y1="130" x2="305" y2="104"/>
+          <line x1="335" y1="66" x2="565" y2="40"/><line x1="335" y1="68" x2="565" y2="58"/><line x1="335" y1="72" x2="565" y2="76"/><line x1="335" y1="96" x2="565" y2="94"/><line x1="335" y1="100" x2="565" y2="112"/><line x1="335" y1="104" x2="565" y2="130"/>
+        </g>
+        <g fill="#191813" font-weight="600"><text x="190" y="120">W (compress)</text><text x="420" y="120">Wᵀ (reconstruct)</text></g>
+      </svg>
+    </div>
+    <figcaption>Six sparse features get squeezed through two hidden neurons, then reconstructed. The i-th column of W is exactly the “arrow” you were dragging in §1 — the direction in hidden space where feature i lives. Training minimizes importance-weighted reconstruction error.</figcaption>
+  </figure>
+
+  <p>The input <span class="math">x</span> holds six features, each off most of the time and on with random strength the rest — 5% of the time here. Importance decays from <span class="chip" style="background:var(--f0)">F1</span> to <span class="chip" style="background:var(--f5)">F6</span>, so mistakes on F1 cost roughly six times what mistakes on F6 cost. The model squeezes all six through two hidden neurons and tries to rebuild what went in.</p>
+
+  <details class="primer">
+    <summary>Primer: how to read x′ = ReLU(WᵀWx + b), and what “training” does <span class="gist">— 60 seconds of notation</span></summary>
+    <div class="p-body">
+      <p><span class="math">x</span> is the list of six feature values going in; <span class="math">x′</span> is the model's attempt to reproduce them. <span class="math">W</span> is a grid of 12 numbers (2 rows × 6 columns); multiplying by <span class="math">W</span> squeezes six numbers down to two, and multiplying by its transpose <span class="math">Wᵀ</span> stretches two back up to six. Column i of <span class="math">W</span> is exactly the arrow you dragged for feature i in the game. <span class="math">b</span> is six learned offsets added at the end.</p>
+      <p><b>ReLU</b> is the simplest nonlinearity there is: if a number is negative, replace it with zero; otherwise leave it alone. Remember that — the entire plot of this article turns on it.</p>
+      <p><b>Training</b> means: score the model by its reconstruction error (weighted by feature importance), then nudge every number in <span class="math">W</span> and <span class="math">b</span> slightly downhill on that score, thousands of times. You watched this exact process when gradient descent took over your layout in §1 — same idea, just applied to more numbers.</p>
+      <p class="p-ref">Deeper: the model definition in Elhage et&nbsp;al., <em>Toy Models of Superposition</em>, §2 <a href="#ref1">[1]</a>.</p>
+    </div>
+  </details>
+  <p>The whole story turns on the nonlinearity, so watch the model run with it and without it. What follows is <b>training right now, in your browser</b>: the arrows are the columns of W, moving under gradient descent as you read this sentence.</p>
+
+  <figure class="widget machine" id="w-toymodel">
+    <div class="w-head">
+      <span class="w-title">The toy model, training live</span>
+      <span class="who">fresh model — same recipe as the machine</span>
+      <span class="ind"><i></i><b>—</b></span>
+      <div class="ctrl">
+        <div class="toggle"><button class="b-lin">Linear</button><button class="b-relu on">+ ReLU</button></div>
+        <button class="btn b-re">Retrain ↻</button>
+      </div>
+    </div>
+    <div class="w-body">
+      <div class="w-col"><canvas class="c-vec"></canvas><span class="lbl">feature directions (columns of W)</span></div>
+      <div class="w-col"><canvas class="c-bars"></canvas><span class="lbl">how strongly each feature is represented ‖Wᵢ‖</span></div>
+    </div>
+    <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
+      <span class="readout">loss <b class="r-loss">—</b></span><span class="readout">steps <b class="r-step">—</b></span>
+      <span class="readout">features active 5% of the time · importance decays F1 → F6</span>
+    </div>
+    <div class="try"><b>TRY</b><span>Toggle Linear and watch four features die. Toggle back and watch them return. Then hit Retrain ↻ — this page is not a recording, and the physics repeats from any seed.</span></div>
+    <figcaption><b>Linear:</b> the model keeps the two most important features at full strength and zeroes the rest; the best a linear map can do is principal components. <b>+ ReLU:</b> same data, same dimensions, one extra nonlinearity, and suddenly four or more features fit, arranged in opposing pairs.</figcaption>
+  </figure>
+
+  <p>The linear model cannot exploit overlap no matter how long it trains, because every bit of crosstalk between two features lands in the output undiminished, every time. Its best available move is the clean sacrifice you tried in the game — keep the top two, drop the rest — and that strategy already has a famous name. It is principal component analysis, arrived at from scratch.</p>
+  <p>Add a ReLU and a bias and the arithmetic changes. The model learns a <em>negative bias</em>, a constant downward shove applied to every output. Small interference — the murmur that other features' arrows leak into yours — gets shoved below zero, and the ReLU deletes everything below zero. Genuine signals are large enough to survive the shove and arrive intact. The nonlinearity is a <em class="term">noise gate</em>, and the noise gate is what makes cramming affordable.</p>
+
+  <p class="aside"><b>An analogy with surprising precision:</b> this is how CDMA, the multiple-access scheme in 3G cellphones, let dozens of phones share one radio channel. Each phone gets a code direction. Signals overlap freely on the channel. The receiver projects onto each code and thresholds away everyone else's crosstalk. Features are the phones, the two-dimensional hidden space is the shared channel, and the ReLU with its negative bias is the thresholding receiver. Superposition is not an exotic neural quirk. It is what efficient systems do whenever channels are scarce and signals are sparse.</p>
+
+  <div class="takeaway"><b>Takeaway</b>Without a nonlinearity, interference is fatal and a model keeps only as many features as it has dimensions. A ReLU with a negative bias deletes small crosstalk instead, and that noise gate is what makes cramming affordable.</div>
+</section>
+
+<!-- ============ 3. SPARSITY ============ -->
+<section id="sparsity">
+  <h2><span class="secno">3.</span>The sparsity dial</h2>
+  <p>The noise gate has exactly one weakness: it deletes only <em>small</em> interference. When two overlapping features fire on the same input their crosstalk is large, it clears the threshold, and the output is corrupted. Everything therefore depends on collisions being rare, and collisions are rare precisely when features are <em class="term">sparse</em>.</p>
+  <p>Sparsity is not an exotic assumption about data; it is the ordinary condition of it. Of the 34 million features Anthropic extracted from a production model, essentially all are silent in any given sentence — “Korean text” and “HTTP request” and “academic citation” do not co-occur. Rarity is the resource superposition spends, and the slider below is the dial that sets it.</p>
+  <p>This is the §2 model with the importances flattened, so no feature can win on privilege alone. The slider changes one number: how often features are active. <b>Scrub it slowly from left to right.</b> Training never stops, so the model re-solves the problem live against whatever data you hand it.</p>
+
+  <figure class="widget machine" id="w-sparsity">
+    <div class="w-head">
+      <span class="w-title">Sparsity controls the geometry</span>
+      <span class="who">sibling of the machine — equal importance</span>
+      <span class="ind"><i></i><b>LIVE</b></span>
+      <div class="ctrl"><span>dense</span><input type="range" min="0" max="1" step="0.005" value="0"><span>sparse</span><button class="btn b-re">↻</button></div>
+    </div>
+    <div class="w-body">
+      <div class="w-col"><canvas class="c-vec"></canvas><span class="lbl">feature directions, adapting live</span></div>
+      <div class="w-col">
+        <canvas class="c-bars"></canvas><span class="lbl">representation strength ‖Wᵢ‖</span>
+        <canvas class="c-strip"></canvas><span class="lbl">regime map (approximate) — you are here</span>
+      </div>
+    </div>
+    <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
+      <span class="readout">sparsity <b class="r-sp">—</b></span>
+      <span class="readout">features represented <b class="r-rep">—</b> / 6</span>
+      <span class="readout">give it a moment to adapt after you move the slider</span>
+    </div>
+    <div class="try"><b>TRY</b><span>Scrub slowly and count the arrows as they squeeze in: two, three, four, five. Each jump is a phase transition. Give the model a moment to adapt after every move.</span></div>
+    <figcaption>At the dense end features collide constantly, interference doesn't pay, and the model holds exactly two features: pure PCA. As sparsity rises, collisions get rare and arrows squeeze in one at a time — first opposing pairs, finally five arrows splayed into a regular star.</figcaption>
+  </figure>
+
+  <p>The changes are not gradual. The solution snaps from one configuration to the next the way water snaps to ice, holding a shape over a wide range of sparsity and then reorganizing within a few percent — and the resemblance to freezing is not decorative. Elhage et&nbsp;al. showed these are phase transitions in the strict physical sense<a href="#ref1"><sup>[1]</sup></a>.</p>
+  <p>Look at where the scrub ends: five near-unit arrows splayed evenly around the circle, each paying a small and equally shared interference tax. At high sparsity the gate eats nearly all crosstalk, so crosstalk is nearly free, and the network prices it accordingly. Capacity stopped meaning “two” the moment collisions became rare.</p>
+  <div class="takeaway"><b>Takeaway</b>Sparsity buys capacity. Features that rarely co-occur can share dimensions almost for free, and the number of features a space holds is set by collision frequency, not by dimension count. The regime changes are sharp phase transitions.</div>
+</section>
+
+<!-- ============ 4. GEOMETRY ============ -->
+<section id="geometry">
+  <h2><span class="secno">4.</span>The network rediscovers geometry</h2>
+  <p>A pentagon should bother you. Gradient descent has no taste, and nothing in the loss function asks for a regular figure; it minimizes squared error and stops. Add a dimension and the coincidence turns into a pattern. Below is the same model with <b>eight features in three dimensions</b>, shown two ways — the arrows themselves, which you can rotate, and a quantity Elhage et&nbsp;al. call <em class="term">feature dimensionality</em>:</p>
+  <p style="text-align:center" class="math">D<sub>i</sub> = ‖W<sub>i</sub>‖² / Σ<sub>j</sub> (Ŵ<sub>i</sub>·W<sub>j</sub>)²</p>
+  <p>Read <span class="math">D<sub>i</sub></span> as how much of a dimension feature i gets to itself. A private, untouched axis gives <span class="math">D=1</span>; sharing an axis with one antipodal partner gives exactly <span class="math">½</span>; a dropped feature gives 0.</p>
+
+  <details class="primer">
+    <summary>Primer: why the clean fractions? <span class="gist">— where ½ and 3/8 come from</span></summary>
+    <div class="p-body">
+      <p>The numerator <span class="math">‖W<sub>i</sub>‖²</span> measures how strongly feature i is stored. The denominator adds up how much every feature (including i itself) spills onto i's direction. If i has a private axis, the only spill is from itself, and the ratio is 1. If two features share one axis (pointing opposite ways), each one's denominator counts both — so each gets ½ of a dimension.</p>
+      <p>The general pattern: when n features split m dimensions <em>evenly</em> — every pair equally spread out, as in a regular polytope — each gets exactly <span class="math">m/n</span>. Eight features in three dimensions: 3/8. Five in two: 2/5. The fractions are clean because the geometry is exact, and the geometry is exact because anything uneven leaves easy loss on the table for gradient descent to grab.</p>
+      <p class="p-ref">Deeper: “feature dimensionality” in Elhage et&nbsp;al., §5 <a href="#ref1">[1]</a>.</p>
+    </div>
+  </details>
+
+  <figure class="widget machine" id="w-geom">
+    <div class="w-head">
+      <span class="w-title">8 features, 3 dimensions</span>
+      <span class="who">bigger sibling — 8 features, 3 neurons</span>
+      <span class="ind"><i></i><b>LIVE</b></span>
+      <div class="ctrl"><span>denser</span><input type="range" min="0" max="1" step="0.005" value="1"><span>sparser</span><button class="btn b-re">↻</button></div>
+    </div>
+    <div class="w-body">
+      <div class="w-col"><canvas class="c-3d"></canvas><span class="lbl">drag to rotate · dots = arrow tips</span></div>
+      <div class="w-col"><canvas class="c-dims"></canvas><span class="lbl">fraction of a dimension each feature gets</span></div>
+    </div>
+    <div class="try"><b>TRY</b><span>Rotate the sphere until the eight dots resolve into two squares, twisted 45° apart. Then watch the strip chart: every feature settles at exactly 3/8 of a dimension.</span></div>
+    <figcaption>At high sparsity, all eight D values lock onto <b>3/8</b>: eight features splitting three dimensions exactly evenly. The arrow tips are the vertices of a <em>square antiprism</em>, a known optimal arrangement of eight points on a sphere. Lower the sparsity and features snap onto the other plateaus, ½ (an antipodal pair) and 1 (a private dimension).</figcaption>
+  </figure>
+
+  <p>Those flat plateaus at clean fractions are a fingerprint, and they identify the problem the network is actually solving. It is not assigning features to neurons. It is spreading points on a sphere so they stay as far from each other as possible — the question J.&nbsp;J.&nbsp;Thomson asked in 1904 about electrons repelling on a sphere, and which mathematicians have worked on ever since. The known optimal arrangements are exactly the shapes on your screen: antipodal pairs, triangles, tetrahedra, square antiprisms. Given nothing but reconstruction error and 122 years less time, gradient descent finds them again.<a href="#ref1"><sup>[1]</sup></a></p>
+  <p>So stop asking what neuron 3 does. The neuron grid is a coordinate system and nothing more; the meaningful objects are directions; and the network arranges those directions by interference-minimizing geometry, entirely indifferent to where the neuron axes happen to fall.</p>
+  <div class="takeaway"><b>Takeaway</b>Features live in geometry, not in neurons. The network spreads feature directions into uniform polytopes, the known solutions to a sphere-packing problem posed in 1904, and the neuron axes are bystanders.</div>
+</section>
+
+<!-- ============ 5. POLYSEMANTICITY ============ -->
+<section id="poly">
+  <h2><span class="secno">5.</span>Polysemanticity is the bill</h2>
+  <p>Now the mystery from §0 pays off. Five feature arrows splay around a circle; a neuron is one axis through that circle; so ask what a single neuron responds to.</p>
+  <p>Below is <b>the machine from the top of the page</b>, the same network you fired concepts into, trained at high sparsity into §3's pentagon and then frozen. Each panel shows one hidden neuron's weight on every feature. (It is also the specimen in the margin map, if your screen is wide enough to show one.)</p>
+
+  <figure class="widget machine" id="w-poly">
+    <div class="w-head"><span class="w-title">What each neuron “means”</span><span class="who m">⬡ the machine itself</span><span class="readout r-prog">—</span></div>
+    <div class="w-body"><canvas></canvas></div>
+    <figcaption>Every neuron reads a weighted mix of nearly every feature — positive on some, negative on others. Neither neuron <em>means</em> anything by itself. The features are perfectly recoverable, but only as directions cutting diagonally across both neurons.</figcaption>
+  </figure>
+
+  <p>There it is: the lobster-and-larvae neuron from §0, reproduced in 18 parameters. Store features as a pentagon and every axis must cut across several of them, so every neuron reads as a weighted mixture of unrelated things. <em class="term">Polysemanticity</em> is not noise and not undertraining. It is what a working compression scheme looks like from the inside, and you can now derive it rather than merely observe it.</p>
+  <p>This is why the obvious interpretability program — catalogue what each neuron does — hit a wall. It was doomed by construction, because <b>the neuron basis is not the basis the information lives in</b>. Nothing has been lost. The features are all present, fully linear and fully recoverable. They are merely rotated away from the axes we happened to be reading.</p>
+  <p>Which leaves an opening. If superposition scrambled the features by a known trick, the trick should run backwards.</p>
+  <div class="takeaway"><b>Takeaway</b>Polysemanticity is the cost of superposition, mechanically: store n features as a polytope in m&lt;n dimensions, and every neuron axis must cut across many features. Interpreting neurons fails because neurons were never the unit of meaning.</div>
+</section>
+
+<!-- ============ 6. SAE ============ -->
+<section id="sae">
+  <h2><span class="secno">6.</span>Training the decoder ring</h2>
+  <p>State the inversion problem in full. You are handed the hidden activations <span class="math">h</span> — two numbers per input, the superposed mush — and asked for the original features back. You do not know how many features there are. You do not know where they point. You have no answer key.</p>
+  <p>The way in is the property that made superposition possible to begin with: <b>sparsity</b>. If the true features are sparse, the correct explanation of any single activation needs only a few ingredients, so the sparsest accurate explanation is probably the true one. That is the whole idea of a <em class="term">sparse autoencoder</em><a href="#ref2"><sup>[2]</sup></a><a href="#ref3"><sup>[3]</sup></a>. Learn an overcomplete dictionary of candidate directions — ten here, for at most six real features — rebuild each activation out of dictionary atoms, and charge a penalty of strength <b>λ</b> for every atom the explanation uses.</p>
+  <details class="primer">
+    <summary>Primer: autoencoders, dictionaries, and why an L1 penalty forces sparsity <span class="gist">— the machinery of §6</span></summary>
+    <div class="p-body">
+      <p>An <b>autoencoder</b> is a network trained to output its own input — pointless, except you constrain the middle, and the constraint forces it to learn structure. The toy model itself was one (constraint: only 2 dimensions). The <b>sparse</b> autoencoder flips the constraint: the middle layer is <em>bigger</em> than the input (10 slots for 2 numbers — an “overcomplete dictionary”), but it's penalized for having many slots active at once.</p>
+      <p>That penalty, <b>λ × (sum of activations)</b>, is the L1 penalty. Why does it force <em>zeros</em>, rather than just shrinking everything a bit? Because L1 charges the same rate for the first unit of activation as for the last — so the cheapest way to pay less is to switch slots off entirely. (A squared penalty would charge almost nothing near zero, so nothing would ever quite reach it.) Crank λ and slots start dying; that's exactly what you'll see in the lab below.</p>
+      <p class="p-ref">Deeper: Bricken et&nbsp;al., <em>Towards Monosemanticity</em>, “Problem Setup” <a href="#ref2">[2]</a>.</p>
+    </div>
+  </details>
+
+  <p>Because this is a toy we have the luxury no one has on a real model: <b>we know the true features</b>, so the SAE can be graded rather than admired. The thick colored arrows below are the truth. The pale arrows are the dictionary, training live. Move λ and the dictionary reacts. You also get one instrument the other figures don't have — <b>click any atom to ablate it</b>, forcing it silent, and watch what the reconstruction loses.</p>
+
+  <figure class="widget machine" id="w-sae">
+    <div class="w-head">
+      <span class="w-title">Sparse autoencoder vs. ground truth</span>
+      <span class="who m">⬡ reading the machine's activations</span>
+      <span class="ind"><i></i><b>—</b></span>
+      <div class="ctrl"><span>λ low</span><input type="range" min="0" max="1" step="0.005" value="0.78"><span>high</span><span class="readout r-lam">—</span><button class="btn b-re">Reset SAE</button></div>
+    </div>
+    <div class="w-body">
+      <div class="w-col"><canvas class="c-vec"></canvas><span class="lbl"><b>thick color</b> = true features · <b>pale</b> = SAE atoms · <b>dashed</b> = dead · <b>click an atom</b> to ablate it</span></div>
+      <div class="w-col">
+        <div class="scorebox" style="flex-direction:column">
+          <div class="score s-rec"><div class="v">—</div><div class="k">feature recovery</div></div>
+          <div class="score s-live"><div class="v">—</div><div class="k">live atoms</div></div>
+          <div class="score s-l0"><div class="v">—</div><div class="k">atoms used per input</div></div>
+          <div class="score s-mse"><div class="v">—</div><div class="k">reconstruction error</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="try"><b>TRY</b><span>Slide λ to both extremes and back to the middle. Then click an atom to ablate it: error spikes, one feature drops out of recovery, and the survivors strain toward the hole. Click again to give it back.</span></div>
+    <figcaption>Recovery = how well each true feature direction is matched by some live atom. <b>λ too low:</b> reconstruction is fine but each input smears across four or five atoms — a new polysemantic code, no better than the neurons. <b>Sweet spot (λ ≈ 0.1–0.5):</b> one atom per active feature, atoms snapped onto the truth, surplus atoms dead. <b>λ too high:</b> the dictionary starves, atom by atom, until nothing is represented at all.</figcaption>
+  </figure>
+
+  <p>What happens at the sweet spot is easy to watch and easy to underrate. The SAE was never told there were five features, never told they formed a pentagon, and never shown anything but two-dimensional points. The sparsity penalty alone drove it onto the true directions — because the sparsest accurate description of superposed data <em>is</em> the original sparse features. Sparsity built the haystack and sparsity is the magnet.</p>
+  <p>The failure modes on that slider are not toy artifacts either. They are the working tensions of real interpretability: too little pressure and the dictionary stays entangled, too much and features die or shatter into fragments. On a real model there is no answer key drawn in thick color, which is why the toy is worth this much attention. It is the only place the grading is honest.</p>
+  <p>The ablation click is worth a sentence of its own. Deleting a suspected feature and watching what breaks is the basic move of causal interpretability; here it costs one click and reports the damage on a meter, while on a production model the same experiment is somebody's research program.</p>
+  <p>Does the recipe survive contact with a real network? Below are three atoms from a dictionary trained this exact way on GPT-2's residual stream, with verbatim records. You could not finish the sentence “this neuron detects ___” in §0. Try it again.</p>
+
+  <figure class="widget machine" id="w-real">
+    <div class="w-head">
+      <span class="w-title">Real dictionary atoms</span>
+      <span class="who m">real model — verbatim records</span>
+      <div class="ctrl"><button class="btn n-prev">←</button><span class="readout n-name">—</span><button class="btn n-next">→</button></div>
+    </div>
+    <div class="snips"></div>
+    <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
+      <span class="readout n-val">hover a lit token</span>
+      <span class="readout">gpt2-small · layer 6 residual · SAE by Joseph Bloom · via Neuronpedia</span>
+    </div>
+    <div class="try"><b>TRY</b><span>Flip through all three atoms and name each one. Notice that this time you can.</span></div>
+    <figcaption>Verbatim records retrieved from <a href="https://www.neuronpedia.org/gpt2-small/6-res-jb/650">Neuronpedia</a> <a href="#ref3">[3]</a>; each atom's ID links to its live page. Where the raw neurons of §0 were mush, each dictionary atom means one thing. Same recipe you just ran, at real scale.</figcaption>
+  </figure>
+  <div class="takeaway"><b>Takeaway</b>The same sparsity that lets networks cram features in is the lever that pulls them back apart. Dictionary learning with a sparsity penalty recovers the true feature directions from the superposed mush — that is the bet underneath all SAE-based interpretability.</div>
+</section>
+
+<!-- ============ 7. EPILOGUE ============ -->
+<section id="epilogue">
+  <h2><span class="secno">7.</span>Interpretability as decompression</h2>
+  <p>Everything on this page happened in six features and two or three dimensions, and the gap to a real model is enormous: 768 dimensions per layer in the smallest GPT-2, tens of millions of features in the largest published dictionary. The toy has still been a faithful guide. Run this same recipe at production scale and the dictionary comes back with an atom for the Golden Gate Bridge, one for code backdoors, one for sycophantic praise — single clean directions pulled out of neurons that individually meant nothing<a href="#ref3"><sup>[3]</sup></a>.</p>
+  <p>The open edges are worth naming, since the field has not settled them. SAEs inherit superposition's tradeoffs instead of abolishing them: recovered features split and merge as the dictionary grows, some real structure may not be a linear direction at all, and how far the dictionary-learning bet extends is under active argument<a href="#ref4"><sup>[4]</sup></a>. You have handled the raw material of that argument already. Feature death and feature shattering were the two ends of your λ slider.</p>
+  <p>What survives every caveat is the reframing. A neural network is a <em class="term">lossy compression scheme for the world</em>: too many concepts, too few dimensions, sparsity exploited without mercy, interference managed by geometry and a noise gate. The internals look inscrutable not because they are alien but because we were reading them in the wrong basis — staring at the channel and calling it the message. Under that view interpretability has a one-line definition:</p>
+  <p style="font-size:22px;font-style:italic;text-align:center;margin:28px 0">Interpretability is the decompression problem.</p>
+  <p>And decompression is hard precisely because the compression worked.</p>
+</section>
+
+<footer>
+  <h3>References &amp; further exploration</h3>
+  <ol class="refs">
+    <li id="ref1">Elhage, N., Hume, T., Olsson, C., et al. <a href="https://transformer-circuits.pub/2022/toy_model/index.html">Toy Models of Superposition</a>. Transformer Circuits Thread, Anthropic, 2022. <em>The source of the toy model, the phase diagrams, the polytope geometry, and the feature-dimensionality measure reproduced live on this page.</em></li>
+    <li id="ref2">Bricken, T., Templeton, A., Batson, J., et al. <a href="https://transformer-circuits.pub/2023/monosemantic-features">Towards Monosemanticity: Decomposing Language Models With Dictionary Learning</a>. Transformer Circuits Thread, Anthropic, 2023. <em>Source of the documented polysemantic neuron in §0 and the SAE recipe in §6.</em></li>
+    <li id="ref3">Templeton, A., et al. <a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/">Scaling Monosemanticity</a>. Anthropic, 2024. <em>SAEs at production scale; browseable features at <a href="https://www.neuronpedia.org">Neuronpedia</a>.</em></li>
+    <li id="ref4">For the contested edges: feature splitting, nonlinear features, and SAE evaluation debates are surveyed in the open-problems discussions of the Transformer Circuits thread and the broader interpretability literature, 2024–2026.</li>
+    <li id="ref5">Bills, S., Cammarata, N., Mossing, D., et al. <a href="https://openaipublic.blob.core.windows.net/neuron-explainer/paper/index.html">Language Models Can Explain Neurons in Language Models</a>. OpenAI, 2023. <em>Source of the verbatim GPT-2 neuron activation records in §0 (public dataset).</em></li>
+  </ol>
+  <h3>Colophon</h3>
+  <p>Every experiment trains in your browser: the toy models (≤ 30 parameters) and SAEs run full Adam training loops in plain JavaScript, no GPU, no server, seeded for reproducibility (↻ buttons re-roll the seed — the phenomena are not cherry-picked). One honesty note: the figures render a lightly time-averaged (Polyak-style) view of the weights, so you see the learning trajectory rather than per-batch sampling noise; the training underneath runs on the raw weights, untouched. The real-model records in §0 and §6 were fetched from the OpenAI neuron dataset and the Neuronpedia API in July 2026 and are shipped verbatim. Source available on request. Built for the <a href="https://visxai.io">VISxAI</a> workshop at IEEE VIS 2026.</p>
+  <p class="repro"><b>Live reproductions from Elhage et&nbsp;al. <a href="#ref1">[1]</a>, verified in this page's test suite:</b><br>
+    <span class="ok">✓</span> linear model collapses to top-m principal components (§2)&ensp;
+    <span class="ok">✓</span> ReLU + negative bias produces superposition on the same data (§2)&ensp;
+    <span class="ok">✓</span> antipodal-pair onset, then 5-in-2 pentagon, as sparsity rises (§3)&ensp;
+    <span class="ok">✓</span> feature dimensionality sticks at 1, ½, 3/8 — square antiprism at 8-in-3 (§4)&ensp;
+    <span class="ok">✓</span> SAE recovery of ground-truth directions, with dead-atom and shattering regimes (§6)</p>
+  <p><b>Design rules.</b> The page is built on a two-world system. <em>Light paper is the human world</em>: narration, captions, and the one experiment you run with your own hands (§1). <em>Dark panels are the machine's world</em>: every figure in which a network is computing renders as an instrument looking into that world — the same darkness as the opening scene, because it is the same place. Saturated color is reserved for feature identity alone (the six features keep their colors from the first pixel to the last); the interface speaks in ink and structure. The serif voice narrates; the monospace voice belongs to the instruments. And inside the figures, nothing animates for decoration: if something moves, glows, or changes size, it encodes a quantity — loss falling, a weight updating, signal flowing, a dictionary atom dying. The opening scene's drifting words are the article's counting argument made spatial; the gentle perspective shift exists only to make the model's world feel inhabited rather than illustrated. That is the whole budget for atmosphere.</p>
+  <div class="fin">···</div>
+</footer>
+
+</main>
+<!--JS--><script type="module">
+// Shared math/training engine. Tiny models, plain typed arrays, no deps.
+class RNG{
+  constructor(seed){this.s=seed>>>0||1}
+  next(){let t=this.s+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}
+  range(a,b){return a+(b-a)*this.next()}
+}
+class Adam{
+  constructor(n,lr){this.m=new Float64Array(n);this.v=new Float64Array(n);this.t=0;this.lr=lr}
+  step(p,g){const{m,v}=this,b1=.9,b2=.999;this.t++;
+    const a=this.lr*Math.sqrt(1-Math.pow(b2,this.t))/(1-Math.pow(b1,this.t));
+    for(let i=0;i<p.length;i++){m[i]=b1*m[i]+(1-b1)*g[i];v[i]=b2*v[i]+(1-b2)*g[i]*g[i];p[i]-=a*m[i]/(Math.sqrt(v[i])+1e-8)}}
+}
+
+// Anthropic toy model: x sparse in R^n, h=Wx in R^m, x' = ReLU(WᵀWx + b).
+class ToyModel{
+  constructor(o){
+    this.n=o.n;this.m=o.m;this.relu=o.relu!==false;this.p=o.p;       // p = P(feature active)
+    this.I=o.importance||new Array(o.n).fill(1);
+    this.rng=new RNG(o.seed||1);
+    this.theta=new Float64Array(this.m*this.n+this.n);               // [W (m×n) | b (n)]
+    for(let i=0;i<this.m*this.n;i++)this.theta[i]=this.rng.range(-.4,.4);
+    this.grad=new Float64Array(this.theta.length);
+    this.opt=new Adam(this.theta.length,o.lr||0.01);
+    this.steps=0;this.loss=0;
+    this._x=new Float64Array(this.n);this._h=new Float64Array(this.m);
+    this._z=new Float64Array(this.n);this._dz=new Float64Array(this.n);this._dh=new Float64Array(this.m);
+  }
+  col(i,th){const W=th||this.theta,c=new Array(this.m);for(let a=0;a<this.m;a++)c[a]=W[a*this.n+i];return c}
+  colNorm(i,th){const W=th||this.theta;let s=0;for(let a=0;a<this.m;a++){const w=W[a*this.n+i];s+=w*w}return Math.sqrt(s)}
+  sampleX(x){for(let i=0;i<this.n;i++)x[i]=this.rng.next()<this.p?this.rng.next():0}
+  hidden(x,h){const{n,m,theta:W}=this;for(let a=0;a<m;a++){let t=0;for(let i=0;i<n;i++)t+=W[a*n+i]*x[i];h[a]=t}}
+  step(B){
+    const{n,m,theta:W,grad:g,I}=this,x=this._x,h=this._h,z=this._z,dz=this._dz,dh=this._dh;
+    g.fill(0);let L=0;
+    for(let s=0;s<B;s++){
+      this.sampleX(x);this.hidden(x,h);
+      for(let i=0;i<n;i++){let t=this.relu?W[m*n+i]:0;for(let a=0;a<m;a++)t+=W[a*n+i]*h[a];z[i]=t}
+      dh.fill(0);
+      for(let i=0;i<n;i++){
+        const y=this.relu?Math.max(0,z[i]):z[i],d=x[i]-y;L+=I[i]*d*d;
+        const dzi=(this.relu&&z[i]<=0)?0:-2*I[i]*d;dz[i]=dzi;
+        if(this.relu)g[m*n+i]+=dzi;
+        for(let a=0;a<m;a++)dh[a]+=W[a*n+i]*dzi;
+      }
+      for(let a=0;a<m;a++){const da=dh[a],ha=h[a];for(let i=0;i<n;i++)g[a*n+i]+=dz[i]*ha+da*x[i]}
+    }
+    for(let i=0;i<g.length;i++)g[i]/=B;
+    this.opt.step(this.theta,g);this.steps++;this.loss=L/B;return this.loss;
+  }
+  // feature dimensionality D_i = ||W_i||^2 / Σ_j (Ŵ_i·W_j)^2
+  dims(th){
+    const n=this.n,D=new Array(n);
+    for(let i=0;i<n;i++){
+      const wi=this.col(i,th),ni=Math.hypot(...wi);
+      if(ni<1e-3){D[i]=0;continue}
+      let den=0;
+      for(let j=0;j<n;j++){const wj=this.col(j,th);let dot=0;for(let a=0;a<this.m;a++)dot+=wi[a]/ni*wj[a];den+=dot*dot}
+      D[i]=ni*ni/den;
+    }
+    return D;
+  }
+}
+
+// Sparse autoencoder on the toy model's hidden activations h ∈ R^m.
+// f = ReLU(We h + be), ĥ = Wd f (decoder columns unit-norm). Loss = ||h−ĥ||² + λ||f||₁
+class SAE{
+  constructor(o){
+    this.k=o.k;this.m=o.m;this.lam=o.lam;
+    this.rng=new RNG(o.seed||7);
+    const{k,m}=this;
+    this.We=new Float64Array(k*m);this.be=new Float64Array(k);this.Wd=new Float64Array(m*k);
+    for(let i=0;i<k*m;i++)this.We[i]=this.rng.range(-.5,.5);
+    for(let i=0;i<m*k;i++)this.Wd[i]=this.rng.range(-.5,.5);
+    this.normalize();
+    this.opt=new Adam(k*m+k+m*k,5e-3);
+    this._g=new Float64Array(k*m+k+m*k);
+    this.usage=new Float64Array(k);this.steps=0;this.loss=0;
+    this._f=new Float64Array(k);this._r=new Float64Array(m);
+  }
+  atom(j,Wd0){const Wd=Wd0||this.Wd,c=new Array(this.m);for(let a=0;a<this.m;a++)c[a]=Wd[a*this.k+j];return c}
+  normalize(){const{m,k,Wd}=this;for(let j=0;j<k;j++){let s=0;for(let a=0;a<m;a++)s+=Wd[a*k+j]**2;s=Math.sqrt(s)||1;for(let a=0;a<m;a++)Wd[a*k+j]/=s}}
+  step(B,sampleH,abl){
+    const{k,m,We,be,Wd,lam,_g:g,_f:f,_r:r}=this;g.fill(0);let L=0;
+    const oWe=0,obe=k*m,oWd=k*m+k,h=new Float64Array(m);
+    for(let s=0;s<B;s++){
+      sampleH(h);
+      for(let j=0;j<k;j++){let t=be[j];for(let a=0;a<m;a++)t+=We[j*m+a]*h[a];f[j]=(abl&&abl[j])?0:Math.max(0,t)}
+      for(let a=0;a<m;a++){let t=0;for(let j=0;j<k;j++)t+=Wd[a*k+j]*f[j];r[a]=t-h[a];L+=r[a]*r[a]}
+      for(let j=0;j<k;j++){
+        if(f[j]>0){this.usage[j]=.999*this.usage[j]+.001;L+=lam*f[j];
+          let df=lam;for(let a=0;a<m;a++)df+=2*r[a]*Wd[a*k+j];
+          g[obe+j]+=df;for(let a=0;a<m;a++)g[oWe+j*m+a]+=df*h[a];
+        }else this.usage[j]*=.999;
+        for(let a=0;a<m;a++)g[oWd+a*k+j]+=2*r[a]*f[j];
+      }
+    }
+    for(let i=0;i<g.length;i++)g[i]/=B;
+    const theta=new Float64Array(g.length);theta.set(We,0);theta.set(be,obe);theta.set(Wd,oWd);
+    this.opt.step(theta,g);
+    We.set(theta.subarray(0,obe));be.set(theta.subarray(obe,oWd));Wd.set(theta.subarray(oWd));
+    this.normalize();this.steps++;this.loss=L/B;return this.loss;
+  }
+  // mean over represented true features of best (signed, clamped) cosine match among live atoms
+  recovery(model,minNorm=.4){
+    let tot=0,cnt=0;
+    for(let i=0;i<model.n;i++){
+      const w=model.col(i),nw=Math.hypot(...w);if(nw<minNorm)continue;
+      let best=0;
+      for(let j=0;j<this.k;j++){
+        if(this.usage[j]<.005)continue;
+        const a=this.atom(j);let dot=0;for(let q=0;q<this.m;q++)dot+=w[q]/nw*a[q];
+        if(dot>best)best=dot;
+      }
+      tot+=best;cnt++;
+    }
+    return cnt?tot/cnt:0;
+  }
+}
+
+// Analytic packing score for the hand game (paper's loss approximation, b=0):
+// L = Σ_i I_i(1−|v_i|²)² + c·Σ_{i≠j} I_i (v_i·v_j)²
+function packScore(V,I,c){
+  let L=0;const n=V.length;
+  for(let i=0;i<n;i++){
+    const ni=V[i][0]**2+V[i][1]**2;L+=I[i]*(1-ni)**2;
+    for(let j=0;j<n;j++){if(i===j)continue;const d=V[i][0]*V[j][0]+V[i][1]*V[j][1];L+=c*I[i]*d*d}
+  }
+  return L;
+}
+function packGradStep(V,I,c,lr){
+  const n=V.length,G=V.map(()=>[0,0]);
+  for(let i=0;i<n;i++){
+    const ni=V[i][0]**2+V[i][1]**2,s=-4*I[i]*(1-ni);
+    G[i][0]+=s*V[i][0];G[i][1]+=s*V[i][1];
+    for(let j=0;j<n;j++){if(i===j)continue;
+      const d=V[i][0]*V[j][0]+V[i][1]*V[j][1],t=2*c*(I[i]+I[j])*d;
+      G[i][0]+=t*V[j][0];G[i][1]+=t*V[j][1];
+    }
+  }
+  for(let i=0;i<n;i++){V[i][0]-=lr*G[i][0];V[i][1]-=lr*G[i][1]}
+}
+
+// Verbatim activation records from real models (fetched July 2026, baked in at build time).
+// Neurons: GPT-2 XL MLP neurons, OpenAI 'neuron-explainer' public dataset.
+// Dictionary atoms: gpt2-small layer-6 residual SAE by Joseph Bloom, via the Neuronpedia API.
+const REALNEURONS=[{"id":"L10.N45","layer":10,"n":45,"recs":[{"t":[" Shows"," Dep","uties"," Be","ating"," Man"," During"," Arrest"," copied","!"," "," ","New","ly"," released"," surveillance"," footage"," from"," 2014"," shows"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.22,0.0,0.0,0.0,0.0,3.45,0.5,0.0,0.0,0.0,0.0,0.0],"m":3.5},{"t":[" a"," brawl"," at"," the"," originating"," restaurant","."," "," ","L","ob","ster"," New","burg"," "," ","In"," the"," mid","-"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.85,0.0,0.0,0.0,0.0,0.0,0.0],"m":2.8},{"t":[" of"," a"," water"," gun"," to"," neutral","ise"," their"," foes",".","  "," ","Desc","ribed"," as"," a"," classic"," 2","D"," platform"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.03,0.0,0.24,0.06,2.78,1.11,0.03,0.0,0.0,0.0,0.0],"m":2.8},{"t":[" Lar","va"," eating"," Saw","fly"," eggs"," "," ","At","co",","],"v":[0.02,0.0,0.0,0.0,2.73,0.04,0.0,0.0,0.0,0.0,0.0],"m":2.7}]},{"id":"L8.N2000","layer":8,"n":2000,"recs":[{"t":[" security"," training"," session"," given"," by"," Stefan"," Ess","er",","," also"," known"," as"," i","0","n","1","c"," in"," the"," jail"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.33,0.0,0.96,0.0,0.37,0.0,0.0],"m":3.3},{"t":["Welcome"," to"," Nor","thing","ton"," Street"," WC","1"," junction"," of"," John","'s"," M","ews"," where"," I"," happened"," to"," come"," across"],"v":[0.0,0.1,0.0,0.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,3.02,0.0,0.0,0.0,0.0,0.27,0.0],"m":3.0},{"t":[" for"," its"," PP","TP"," sub","net","."," The"," second"," rule"," adjusts"," the"," MT","U"," size"," :"," "," ","You"," are"],"v":[0.0,0.0,0.0,0.0,0.12,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.99,0.0,0.0,0.0,0.0,0.0,0.0],"m":3.0},{"t":[" Bureau"," (","AT","SB","),"," the"," incident"," details"," how"," a"," Mo","oney"," M","20",","," flying"," on"," instruments"," and"," in"],"v":[0.0,0.0,0.0,1.59,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.99,0.0,0.0,0.67,0.01,0.0,0.0],"m":3.0}]},{"id":"L15.N454","layer":15,"n":454,"recs":[{"t":[" invited"," everybody"," to"," Lex","i","'s"," graduation"," party","."," Jacqu","eline",","," Chris"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,2.75,1.02,0.0,0.0,0.0,0.0,0.0],"m":2.8},{"t":[" bringing"," this"," to"," our"," attention","."," I"," will"," inform"," the"," developers"," and"," pass"," on"," the"," information"," you"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.19,0.0,0.64,2.69,0.0,0.15,0.0,0.0,0.37,0.0],"m":2.7},{"t":[" "," ","The"," justice"," apparently"," knew"," that"," the"," remark"," could"," be"," interpreted"," as"," racist",","," at"," the"," time"," cred","iting"],"v":[0.0,0.0,0.0,0.07,0.0,0.54,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2.58,0.0,0.29,0.05,0.2,0.0,0.0],"m":2.6},{"t":[" planning"," on"," making"," a"," case"," to"," the"," higher","-","ups"," that"," the"," liabilities"," of"," storing"," CC"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,1.3,2.06,0.0,2.52,0.29,0.0,0.29,0.0,0.2,0.0],"m":2.5}]},{"id":"L12.N3013","layer":12,"n":3013,"recs":[{"t":[" carries"," responsibility","."," Defeat"," signals"," the"," end",".\""," "," ","K","isen","os","ato"," said"," he"," knows"," what"," his"," former"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.23,0.0,0.0,0.0,0.0,0.0,0.0],"m":4.2},{"t":["nd"," Annual"," Ride"," for"," Homeland"," Security","."," My"," name","'s"," Paw","L"," Baz","ile","."," I","'ll"," be"," there"," with"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,4.02,0.0,0.0,0.0,0.0,0.0,0.0],"m":4.0},{"t":["AL","AM","AZ","OO",","," Mich","."," -"," A"," 193"],"v":[0.03,0.08,0.0,3.97,0.04,0.0,0.0,0.0,0.0,0.0],"m":4.0},{"t":["mon","uclear"," war","head"," was"," detonated"," beneath"," the"," Nevada"," desert"],"v":[0.03,0.0,0.0,3.93,0.0,0.0,0.0,0.0,0.0,0.0],"m":3.9}]}];
+const REALFEATURES=[{"id":"#650","idx":650,"label":"economic weakness","url":"https://www.neuronpedia.org/gpt2-small/6-res-jb/650","recs":[{"t":[".","40"," an"," ounce"," Thursday",","," boosted"," by"," weakness"," in"," the"," U",".","S","."],"v":[0.0,0.0,0.0,0.0,0.0,0.0,4.52,2.53,15.96,6.16,2.17,0.0,0.0,0.0,0.0],"m":16.0},{"t":[" 0",".","1","%"," in"," January",","," as"," weaker"," stock"," prices"," and"," housing"," data"," drove"],"v":[3.16,0.85,3.21,1.29,1.75,0.0,0.0,0.0,14.91,1.05,3.06,0.0,0.0,7.42,7.36],"m":14.9},{"t":[" rising"," demand"," from"," China"," and"," India"," and"," a"," weak"," US"," dollar",","," in"," which"," oil"],"v":[1.7,2.64,2.04,0.0,0.0,0.0,0.0,0.0,14.4,0.0,0.0,0.0,0.0,0.0,0.0],"m":14.4},{"t":[" and"," wet"," weather"," might"," have"," contributed"," to"," the"," slowdown",","," said"," James"," Knight","ley",","],"v":[0.0,0.84,2.64,0.0,0.65,0.0,0.0,0.0,14.1,0.0,0.0,0.0,0.0,0.0,0.0],"m":14.1}]},{"id":"#7003","idx":7003,"label":"the Medicaid program","url":"https://www.neuronpedia.org/gpt2-small/6-res-jb/7003","recs":[{"t":[" the"," federal"," government"," over"," expanding"," the"," state","'s"," Medicaid"," program"," when"," he"," sits"," down"," Sunday"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,62.55,1.8,0.0,0.0,0.0,0.0,0.0],"m":62.5},{"t":[" the"," company"," operates"," in"," that"," had"," expanded"," their"," Medicaid"," programs","."," "," ","Has","lam"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,61.0,0.0,0.0,0.0,0.0,0.0,0.0],"m":61.0},{"t":["The"," Senate"," bill"," also"," cuts"," off"," Obamacare","'s"," Medicaid"," expansion"," more"," gradually"," than"," the"," House"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,60.21,2.38,0.0,0.0,0.0,0.0,0.0],"m":60.2},{"t":[" to"," offer"," Tenn","Care",","," the"," state","'s"," Medicaid"," program",","," to"," more"," adults"," as"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,59.86,0.31,0.0,0.0,0.0,0.0,0.0],"m":59.9}]},{"id":"#2320","idx":2320,"label":"someone taken to a facility","url":"https://www.neuronpedia.org/gpt2-small/6-res-jb/2320","recs":[{"t":[" assault","."," "," ","The"," boy"," was"," taken"," to"," Butler"," Memorial"," Hospital"," and"," did"," not"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,15.9,0.0,0.0,0.0,0.52,0.0,0.0],"m":15.9},{"t":[" ground","."," "," ","Hen","io"," was"," taken"," to"," the"," Mesa"," City"," Jail"," where"," he"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,15.37,6.5,0.0,0.0,0.0,0.0,0.0],"m":15.4},{"t":[" himself"," shot"," in"," the"," neck"," and"," was"," taken"," to"," hospital"," in"," a"," serious"," condition"," at"],"v":[0.0,0.0,0.85,0.0,0.0,0.0,0.0,0.46,15.14,0.0,0.6,0.0,0.0,0.0,0.0],"m":15.1},{"t":[" In"," 2015",","," Bridges"," was"," arrested"," and"," taken"," into"," custody"," on"," charges"," related"," to"," the"],"v":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.95,15.05,3.35,0.46,0.0,0.0,0.0,0.0],"m":15.1}]}];
+
+// (core.js + realdata.js inlined above)
+
+// ---------- shared ----------
+const css=getComputedStyle(document.documentElement);
+const FC=[...Array(8)].map((_,i)=>css.getPropertyValue(`--f${i}`).trim());
+const INK='#191813',INK2='#8d887c',RULE='#e2ddcf',ACC='#191813',GOOD='#19a77f';
+// machine-world canvas palette (dark instrument panels)
+const M={ink:'#e8e4d8',mut:'#8fa097',rule:'#2a3034',grid:'#20262a'};
+const SANS='11px "IBM Plex Mono",ui-monospace,Menlo,monospace';
+
+function setupCanvas(c,w,h){
+  const d=Math.min(devicePixelRatio||1,2);
+  c.width=w*d;c.height=h*d;c.style.width=w+'px';c.style.height=h+'px';
+  const x=c.getContext('2d');x.scale(d,d);return x;
+}
+function vecPanel(ctx,W,H,r,pal){
+  const cx=W/2,cy=H/2,R=r||Math.min(W,H)/2-26,P=pal||{mut:INK2,rule:RULE,grid:null};
+  return{
+    cx,cy,R,px:v=>[cx+v[0]*R,cy-v[1]*R],
+    base(){
+      ctx.clearRect(0,0,W,H);
+      if(P.grid){ctx.strokeStyle=P.grid;ctx.lineWidth=1;ctx.beginPath();
+        for(let g=30;g<W;g+=30){ctx.moveTo(g,0);ctx.lineTo(g,H)}
+        for(let g=30;g<H;g+=30){ctx.moveTo(0,g);ctx.lineTo(W,g)}ctx.stroke()}
+      ctx.strokeStyle=P.rule;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(cx-R-12,cy);ctx.lineTo(cx+R+12,cy);ctx.moveTo(cx,cy-R-12);ctx.lineTo(cx,cy+R+12);ctx.stroke();
+      ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=P.mut;ctx.font=SANS;ctx.textAlign='left';
+      ctx.fillText('neuron 1 →',cx+R-64,cy+16);
+      ctx.save();ctx.translate(cx-8,cy-R+62);ctx.rotate(-Math.PI/2);ctx.fillText('neuron 2 →',0,0);ctx.restore();
+    },
+    arrow(v,color,o={}){
+      const[x,y]=this.px(v),lw=o.lw||3;
+      ctx.strokeStyle=ctx.fillStyle=color;ctx.lineWidth=lw;ctx.globalAlpha=o.alpha??1;
+      if(o.dash)ctx.setLineDash(o.dash);
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);
+      const a=Math.atan2(y-cy,x-cx),hs=4+lw;
+      ctx.beginPath();ctx.moveTo(x,y);
+      ctx.lineTo(x-hs*Math.cos(a-.45),y-hs*Math.sin(a-.45));
+      ctx.lineTo(x-hs*Math.cos(a+.45),y-hs*Math.sin(a+.45));
+      ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+    }
+  };
+}
+function drawBars(ctx,W,H,vals,colors,o={}){
+  ctx.clearRect(0,0,W,H);
+  const P=o.pal||{mut:INK2,rule:RULE};
+  const max=o.max||1.3,pad=26,bw=(W-pad-10)/vals.length,base=H-22;
+  ctx.font=SANS;
+  if(o.target!=null){const y=base-(o.target/max)*(H-46);
+    ctx.strokeStyle=P.mut;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(pad-6,y);ctx.lineTo(W-6,y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=P.mut;ctx.textAlign='left';ctx.fillText(o.targetLabel||'1.0',2,y+4);}
+  vals.forEach((v,i)=>{
+    const h=Math.max(0,Math.min(v,max))/max*(H-46),x=pad+i*bw;
+    ctx.fillStyle=colors[i];ctx.globalAlpha=.9;
+    ctx.fillRect(x+3,base-h,bw-6,h);ctx.globalAlpha=1;
+    ctx.fillStyle=P.mut;ctx.textAlign='center';ctx.fillText(o.labels?o.labels[i]:i+1,x+bw/2,base+14);
+  });
+  ctx.strokeStyle=P.rule;ctx.beginPath();ctx.moveTo(pad-6,base);ctx.lineTo(W-6,base);ctx.stroke();
+}
+// loop manager: widgets tick only when on-screen & tab visible
+const ACTIVE=new Set(),ALL=[];
+function register(el,w){
+  ALL.push(w);
+  new IntersectionObserver(e=>{e[0].isIntersecting?ACTIVE.add(w):ACTIVE.delete(w)},{rootMargin:'80px'}).observe(el);
+}
+window.__step=(n=1)=>{for(let k=0;k<n;k++)ALL.forEach(w=>w.tick())};   // headless testing
+window.__dbg={};
+(function loop(){
+  if(!document.hidden)for(const w of ACTIVE){
+    try{w.tick()}catch(e){console.error('widget tick failed:',e);ACTIVE.delete(w)}
+  }
+  requestAnimationFrame(loop);
+})();
+const $=s=>document.querySelector(s);
+const fmt=(x,d=3)=>x.toFixed(d);
+// Display smoothing (Polyak-style): figures render a light EMA of the weights
+// so the reader sees the trajectory, not per-batch sampling noise. Training
+// itself always runs on the raw weights.
+function ema(dst,src,a){
+  if(!dst||dst.length!==src.length)return Float64Array.from(src);
+  for(let i=0;i<src.length;i++)dst[i]+=a*(src[i]-dst[i]);
+  return dst;
+}
+const EMA_W=.12;   // weight-display smoothing per frame
+
+// ---------- real-model record browsers (§0 raw neurons, §6 dictionary atoms) ----------
+function recordBrowser(root,items,label){
+  const box=root.querySelector('.snips'),nameEl=root.querySelector('.n-name'),valEl=root.querySelector('.n-val');
+  let cur=0;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  function show(){
+    const it=items[cur];
+    nameEl.innerHTML=label(it,cur,items.length);
+    box.innerHTML=it.recs.map(r=>{
+      const mx=Math.max(...r.v,1e-6);
+      const spans=r.t.map((t,i)=>{
+        const a=r.v[i]/mx;
+        if(a<.03)return esc(t);
+        const cls=a>=.45?'tk hi':'tk';
+        return `<span class="${cls}" style="--a:${a.toFixed(2)}" data-v="${r.v[i]}" title="activation ${r.v[i]}">${esc(t)}</span>`;
+      }).join('');
+      return `<div class="snip"><span class="tag">peak activation ${r.m}</span>${spans}</div>`;
+    }).join('');
+    if(valEl)valEl.textContent='hover a lit token';
+  }
+  box.addEventListener('pointerover',e=>{
+    const t=e.target.closest('.tk');
+    if(t&&valEl)valEl.textContent='activation '+t.dataset.v;
+  });
+  root.querySelector('.n-prev').onclick=()=>{cur=(cur+items.length-1)%items.length;show()};
+  root.querySelector('.n-next').onclick=()=>{cur=(cur+1)%items.length;show()};
+  show();
+}
+(function(){const r=$('#w-hook');if(!r)return;
+  recordBrowser(r,REALNEURONS,(it,i,n)=>`neuron ${it.id} · ${i+1} of ${n}`);
+})();
+(function(){const r=$('#w-real');if(!r)return;
+  recordBrowser(r,REALFEATURES,(it,i,n)=>`atom <a href="${it.url}">${it.id}</a> “${it.label}” · ${i+1} of ${n}`);
+})();
+
+// ---------- 1. packing game ----------
+(function(){
+  const root=$('#w-game');if(!root)return;
+  const N=6,I=[1,.9,.8,.7,.6,.5],C=.25,SEED=21;
+  const cv=root.querySelector('canvas'),ctx=setupCanvas(cv,340,340),P=vecPanel(ctx,340,340);
+  const youEl=root.querySelector('.s-you'),sgdEl=root.querySelector('.s-sgd');
+  let V,sgdV=null,anim=0,drag=-1,dirty=true;
+  function reset(){const r=new RNG(SEED);V=[...Array(N)].map(()=>{const a=r.range(0,6.28),m=r.range(.15,.35);return[m*Math.cos(a),m*Math.sin(a)]});sgdV=null;anim=0;dirty=true;update()}
+  function update(){
+    const s=packScore(V,I,C);youEl.textContent=fmt(s);
+    if(sgdV){const g=packScore(sgdV,I,C);sgdEl.textContent=fmt(g);
+      sgdEl.parentElement.classList.toggle('win',g<s-1e-4);
+      youEl.parentElement.classList.toggle('win',s<g-1e-4);
+    }else{sgdEl.textContent='—';sgdEl.parentElement.classList.remove('win');youEl.parentElement.classList.remove('win')}
+  }
+  cv.addEventListener('pointerdown',e=>{
+    const b=cv.getBoundingClientRect(),mx=e.clientX-b.left,my=e.clientY-b.top;
+    let best=20,bi=-1;
+    V.forEach((v,i)=>{const[x,y]=P.px(v),d=Math.hypot(mx-x,my-y);if(d<best){best=d;bi=i}});
+    drag=bi;if(bi>=0)cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove',e=>{
+    if(drag<0)return;
+    const b=cv.getBoundingClientRect();
+    let vx=(e.clientX-b.left-P.cx)/P.R,vy=-(e.clientY-b.top-P.cy)/P.R;
+    const n=Math.hypot(vx,vy);if(n>1.08){vx*=1.08/n;vy*=1.08/n}
+    V[drag]=[vx,vy];dirty=true;update();
+  });
+  cv.addEventListener('pointerup',()=>drag=-1);
+  root.querySelector('.b-sgd').addEventListener('click',()=>{sgdV=V.map(v=>[...v]);anim=420;dirty=true});
+  root.querySelector('.b-reset').addEventListener('click',reset);
+  const w={tick(){
+    if(anim>0){for(let i=0;i<7&&anim>0;i++,anim--)packGradStep(sgdV,I,C,.02);update();dirty=true}
+    if(!dirty)return;dirty=false;
+    P.base();
+    if(sgdV)V.forEach((v,i)=>P.arrow(v,FC[i],{alpha:.25,lw:2+2.5*I[i]}));
+    else V.forEach((v,i)=>P.arrow(v,FC[i],{lw:2+2.5*I[i]}));
+    if(sgdV)sgdV.forEach((v,i)=>P.arrow(v,FC[i],{lw:2+2.5*I[i]}));
+  }};
+  reset();register(root,w);
+})();
+
+// ---------- 2. toy model: linear vs relu ----------
+(function(){
+  const root=$('#w-toymodel');if(!root)return;
+  const I6=[1,.7,.49,.34,.24,.17];let seed=3,relu=true,model;
+  const cv=root.querySelector('.c-vec'),ctx=setupCanvas(cv,300,300),P=vecPanel(ctx,300,300,null,M);
+  const cb=root.querySelector('.c-bars'),bx=setupCanvas(cb,250,300);
+  const lossEl=root.querySelector('.r-loss'),stepEl=root.querySelector('.r-step');
+  const ind=root.querySelector('.ind'),indB=ind&&ind.querySelector('b');
+  const bL=root.querySelector('.b-lin'),bR=root.querySelector('.b-relu');
+  let S=null,lossD=null;
+  function build(){model=new ToyModel({n:6,m:2,relu,p:.05,importance:I6,seed});S=null;lossD=null;bL.classList.toggle('on',!relu);bR.classList.toggle('on',relu)}
+  bL.onclick=()=>{relu=false;build()};bR.onclick=()=>{relu=true;build()};
+  root.querySelector('.b-re').onclick=()=>{seed+=13;build()};
+  const w={tick(){
+    if(model.steps<12000)for(let i=0;i<25;i++)model.step(256);
+    S=ema(S,model.theta,EMA_W);
+    lossD=lossD==null?model.loss:lossD+.05*(model.loss-lossD);
+    P.base();
+    for(let i=0;i<6;i++)P.arrow(model.col(i,S),FC[i],{lw:2.5});
+    drawBars(bx,250,300,[...Array(6)].map((_,i)=>model.colNorm(i,S)),FC,{target:1,targetLabel:'goal',pal:M});
+    lossEl.textContent=fmt(lossD,4);stepEl.textContent=model.steps.toLocaleString();
+    if(ind){const live=model.steps<12000;ind.classList.toggle('frozen',!live);indB.textContent=live?'LIVE':'CONVERGED'}
+  }};
+  build();register(root,w);
+})();
+
+// ---------- 3. sparsity dial ----------
+// boundaries measured: 9k-step training, 3 seeds per point (see test sweep)
+const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']];
+(function(){
+  const root=$('#w-sparsity');if(!root)return;
+  const Id=[1,.93,.86,.8,.74,.69];let seed=5;
+  const u2p=u=>Math.pow(10,(1-u)*0+u*Math.log10(.02));   // p: 1 → 0.02, log
+  const slider=root.querySelector('input');
+  let model=new ToyModel({n:6,m:2,p:u2p(+slider.value),importance:Id,seed});
+  const cv=root.querySelector('.c-vec'),ctx=setupCanvas(cv,300,300),P=vecPanel(ctx,300,300,null,M);
+  const cb=root.querySelector('.c-bars'),bx=setupCanvas(cb,250,170);
+  const cs=root.querySelector('.c-strip'),sx=setupCanvas(cs,250,96);
+  const spEl=root.querySelector('.r-sp'),repEl=root.querySelector('.r-rep');
+  let S=null;
+  slider.addEventListener('input',()=>{model.p=u2p(+slider.value)});
+  root.querySelector('.b-re').onclick=()=>{seed+=13;model=new ToyModel({n:6,m:2,p:u2p(+slider.value),importance:Id,seed});S=null};
+  function strip(u){
+    sx.clearRect(0,0,250,96);sx.font=SANS;sx.textAlign='center';
+    REGIONS.forEach(([a,b,t],i)=>{
+      sx.fillStyle=['#1c2225','#222a2e','#293338','#313d43'][i];
+      sx.fillRect(8+a*234,14,(b-a)*234,30);
+      sx.fillStyle=M.mut;sx.fillText(t,8+(a+b)/2*234,34);
+    });
+    sx.fillStyle=M.mut;sx.fillText('features represented (measured)',125,76);
+    sx.strokeStyle=M.ink;sx.lineWidth=2.5;const x=8+u*234;
+    sx.beginPath();sx.moveTo(x,8);sx.lineTo(x,50);sx.stroke();
+    sx.fillStyle=M.ink;sx.beginPath();sx.moveTo(x,58);sx.lineTo(x-5,50);sx.lineTo(x+5,50);sx.fill();
+  }
+  const w={tick(){
+    for(let i=0;i<25;i++)model.step(256);
+    S=ema(S,model.theta,EMA_W);
+    P.base();for(let i=0;i<6;i++)P.arrow(model.col(i,S),FC[i],{lw:2.5});
+    const norms=[...Array(6)].map((_,i)=>model.colNorm(i,S));
+    drawBars(bx,250,170,norms,FC,{target:1,targetLabel:'',pal:M});
+    strip(+slider.value);
+    const p=model.p;
+    spEl.textContent=(100*(1-p)).toFixed(0)+'%';
+    repEl.textContent=norms.filter(x=>x>.5).length;
+  }};
+  window.__dbg.sp3=()=>({raw:model.col(0),disp:S?model.col(0,S):null});
+  register(root,w);
+})();
+
+// ---------- 4. geometry m=3 ----------
+(function(){
+  const root=$('#w-geom');if(!root)return;
+  let seed=11,model=new ToyModel({n:8,m:3,p:.03,seed});
+  const cv=root.querySelector('.c-3d'),ctx=setupCanvas(cv,300,300);
+  const ch=root.querySelector('.c-dims'),hx=setupCanvas(ch,330,300);
+  let yaw=.6,pitch=.35,auto=true,hist=[],S=null;
+  const slider=root.querySelector('input');
+  const u2p=u=>Math.pow(10,Math.log10(.5)*(1-u)+Math.log10(.015)*u);
+  slider.addEventListener('input',()=>{model.p=u2p(+slider.value)});
+  root.querySelector('.b-re').onclick=()=>{seed+=13;model=new ToyModel({n:8,m:3,p:u2p(+slider.value),seed});hist=[];S=null};
+  cv.classList.add('grabbable');
+  let dr=null;
+  cv.addEventListener('pointerdown',e=>{dr=[e.clientX,e.clientY];auto=false;cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener('pointermove',e=>{if(!dr)return;yaw+=(e.clientX-dr[0])*.01;pitch=Math.max(-1.4,Math.min(1.4,pitch+(e.clientY-dr[1])*.01));dr=[e.clientX,e.clientY]});
+  cv.addEventListener('pointerup',()=>dr=null);
+  function proj(v){
+    const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+    const x=v[0]*cy+v[2]*sy,z=-v[0]*sy+v[2]*cy,y=v[1]*cp-z*sp,zz=v[1]*sp+z*cp;
+    return[x,y,zz];
+  }
+  function draw3d(){
+    ctx.clearRect(0,0,300,300);
+    const cx=150,cy=150,R=105;
+    ctx.strokeStyle=M.rule;ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+    ctx.setLineDash([3,4]);ctx.beginPath();                       // equator
+    for(let t=0;t<=64;t++){const a=t/64*6.2832,p=proj([Math.cos(a),0,Math.sin(a)]);
+      const X=cx+p[0]*R,Y=cy-p[1]*R;t?ctx.lineTo(X,Y):ctx.moveTo(X,Y)}
+    ctx.stroke();ctx.setLineDash([]);
+    const arrs=[...Array(8)].map((_,i)=>{
+      const c=model.col(i,S),n=Math.hypot(...c)||1;
+      return{i,n:Math.min(n,1.15),p:proj(c.map(x=>x/n))};
+    }).sort((a,b)=>a.p[2]-b.p[2]);
+    for(const a of arrs){
+      const X=cx+a.p[0]*R*a.n,Y=cy-a.p[1]*R*a.n,back=a.p[2]<0;
+      ctx.strokeStyle=ctx.fillStyle=FC[a.i];ctx.globalAlpha=back?.35:1;ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(X,Y);ctx.stroke();
+      ctx.beginPath();ctx.arc(X,Y,4.5,0,7);ctx.fill();ctx.globalAlpha=1;
+    }
+  }
+  const REF=[[1,'1 — own dimension'],[.5,'1/2 — antipodal pair'],[.375,'3/8 — antiprism'],[0,'0 — dropped']];
+  function drawHist(){
+    hx.clearRect(0,0,330,300);hx.font=SANS;
+    const L=36,T=12,W2=330-L-10,H2=300-T-26,ymax=1.08;
+    const Y=v=>T+H2-(v/ymax)*H2;
+    for(const[v,t]of REF){hx.strokeStyle=M.rule;hx.setLineDash([3,3]);
+      hx.beginPath();hx.moveTo(L,Y(v));hx.lineTo(L+W2,Y(v));hx.stroke();hx.setLineDash([]);
+      hx.fillStyle=M.mut;hx.textAlign='left';hx.fillText(t,L+4,Y(v)-4)}
+    hx.strokeStyle=M.mut;hx.beginPath();hx.moveTo(L,T);hx.lineTo(L,T+H2);hx.lineTo(L+W2,T+H2);hx.stroke();
+    hx.save();hx.translate(12,T+H2/2);hx.rotate(-Math.PI/2);hx.textAlign='center';hx.fillText('dimensions per feature  Dᵢ',0,0);hx.restore();
+    hx.textAlign='center';hx.fillText('training time →',L+W2/2,298);
+    if(hist.length<2)return;
+    const HN=hist.length;
+    for(let i=0;i<8;i++){hx.strokeStyle=FC[i];hx.lineWidth=1.8;hx.globalAlpha=.85;hx.beginPath();
+      for(let t=0;t<HN;t++){const X=L+t/(Math.max(HN-1,200))*W2;t?hx.lineTo(X,Y(hist[t][i])):hx.moveTo(X,Y(hist[t][i]))}
+      hx.stroke()}
+    hx.globalAlpha=1;
+  }
+  const w={tick(){
+    for(let i=0;i<18;i++)model.step(256);
+    S=ema(S,model.theta,EMA_W);
+    if(model.steps%72<18){hist.push(model.dims(S));if(hist.length>200)hist.shift()}
+    if(auto)yaw+=.004;
+    draw3d();drawHist();
+  }};
+  register(root,w);
+})();
+
+// ---------- shared frozen base model (pentagon) for §5/§6 ----------
+const BASE={model:new ToyModel({n:6,m:2,p:.03,importance:[1,.93,.86,.8,.74,.69],seed:5}),done:false,subs:[]};
+window.__dbg.BASE=BASE;
+BASE.tickTrain=()=>{ if(BASE.done)return;
+  for(let i=0;i<120&&BASE.model.steps<8000;i++)BASE.model.step(256);
+  if(BASE.model.steps>=8000){BASE.done=true;BASE.subs.forEach(f=>f())}
+};
+
+// ---------- 5. polysemanticity ----------
+(function(){
+  const root=$('#w-poly');if(!root)return;
+  const cv=root.querySelector('canvas'),ctx=setupCanvas(cv,560,250);
+  cv.style.maxWidth='100%';cv.style.height='auto';   // 560px logical width; shrink on phones
+  const prog=root.querySelector('.r-prog');
+  const w={tick(){
+    BASE.tickTrain();
+    const m=BASE.model;
+    prog.textContent=BASE.done?'trained · frozen':`training… ${m.steps}/8000`;
+    ctx.clearRect(0,0,560,250);ctx.font=SANS;
+    for(let a=0;a<2;a++){
+      const ox=a*285+10,mid=135;
+      ctx.fillStyle=M.ink;ctx.textAlign='left';ctx.font='600 '+SANS;
+      ctx.fillText(`neuron ${a+1} — weight per feature`,ox+8,18);ctx.font=SANS;
+      ctx.strokeStyle=M.rule;ctx.beginPath();ctx.moveTo(ox+8,mid);ctx.lineTo(ox+262,mid);ctx.stroke();
+      for(let i=0;i<6;i++){
+        const v=m.theta[a*6+i],h=v*52,x=ox+18+i*41;
+        ctx.fillStyle=FC[i];ctx.globalAlpha=.9;
+        ctx.fillRect(x,h>0?mid-h:mid,30,Math.abs(h));ctx.globalAlpha=1;
+        ctx.fillStyle=M.mut;ctx.textAlign='center';
+        ctx.fillText(v.toFixed(2),x+15,h>0?mid-h-6:mid+Math.abs(h)+14);
+        ctx.fillText('F'+(i+1),x+15,238);
+      }
+    }
+  }};
+  register(root,w);
+})();
+
+// ---------- 6. SAE lab ----------
+(function(){
+  const root=$('#w-sae');if(!root)return;
+  const K=10;let sae=null,lam=.3;
+  const slider=root.querySelector('input');
+  const u2l=u=>Math.pow(10,Math.log10(5e-4)*(1-u)+Math.log10(2.5)*u);
+  const l2u=l=>(Math.log10(l)-Math.log10(5e-4))/(Math.log10(2.5)-Math.log10(5e-4));
+  slider.value=l2u(lam);
+  const cv=root.querySelector('.c-vec'),ctx=setupCanvas(cv,320,320),P=vecPanel(ctx,320,320,null,M);
+  const recEl=root.querySelector('.s-rec .v'),liveEl=root.querySelector('.s-live .v'),l0El=root.querySelector('.s-l0 .v'),lamEl=root.querySelector('.r-lam'),mseEl=root.querySelector('.s-mse .v');
+  const ind=root.querySelector('.ind'),indB=ind&&ind.querySelector('b');
+  const x6=new Float64Array(6);
+  const sampler=h=>{BASE.model.sampleX(x6);BASE.model.hidden(x6,h)};
+  const abl=new Uint8Array(K);let l0=0,tk=0,SW=null,recD=null,mseD=null;
+  slider.addEventListener('input',()=>{lam=u2l(+slider.value);if(sae)sae.lam=lam});
+  root.querySelector('.b-re').onclick=()=>{sae=new SAE({k:K,m:2,lam,seed:7+Math.floor(Math.random()*99)});SW=null;recD=null;mseD=null;abl.fill(0)};
+  // the scalpel: click an atom to ablate it (forced silent in every forward pass)
+  cv.style.cursor='pointer';
+  cv.addEventListener('pointerdown',e=>{
+    if(!sae||!SW)return;
+    const b=cv.getBoundingClientRect(),mx=e.clientX-b.left,my=e.clientY-b.top;
+    let best=20,bi=-1,bestLive=false;
+    for(let j=0;j<K;j++){
+      const a=sae.atom(j,SW),[X,Y]=P.px([a[0]*.82,a[1]*.82]);
+      const d=Math.hypot(mx-X,my-Y),liveJ=sae.usage[j]>=.01||abl[j];
+      if(d<20&&liveJ&&(!bestLive||d<best)){best=d;bi=j;bestLive=true}   // live (or ablated) atoms win ties
+      else if(!bestLive&&d<best){best=d;bi=j}
+    }
+    if(bi>=0)abl[bi]^=1;
+  });
+  function estMSE(){
+    const h=new Float64Array(2),f=new Float64Array(K);let tot=0,c=0;
+    for(let t=0;t<100;t++){
+      sampler(h);
+      for(let j=0;j<K;j++){let z=sae.be[j];for(let a=0;a<2;a++)z+=sae.We[j*2+a]*h[a];f[j]=abl[j]?0:Math.max(0,z)}
+      for(let a=0;a<2;a++){let y=0;for(let j=0;j<K;j++)y+=sae.Wd[a*K+j]*f[j];tot+=(y-h[a])**2}
+      c++;
+    }
+    return tot/c;
+  }
+  function estL0(){
+    const h=new Float64Array(2);let tot=0,cnt=0;
+    for(let t=0;t<260;t++){
+      BASE.model.sampleX(x6);if(!x6.some(v=>v>0))continue;BASE.model.hidden(x6,h);
+      let c=0;for(let j=0;j<K;j++){let z=sae.be[j];for(let a=0;a<2;a++)z+=sae.We[j*2+a]*h[a];if(z>.02)c++}
+      tot+=c;cnt++;
+    }
+    return cnt?tot/cnt:0;
+  }
+  const w={tick(){
+    BASE.tickTrain();
+    if(ind){ind.classList.toggle('frozen',!BASE.done);indB.textContent=BASE.done?'LIVE':'WAITING'}
+    if(!BASE.done)return;
+    if(!sae)sae=new SAE({k:K,m:2,lam,seed:7});
+    const hot=abl.some(x=>x);          // scalpel in: slow motion, so the wound and the healing are visible
+    for(let i=0;i<(hot?4:30);i++)sae.step(128,sampler,abl);
+    SW=ema(SW,sae.Wd,EMA_W);
+    const rec=sae.recovery(BASE.model);
+    recD=recD==null?rec:recD+(hot?.2:.05)*(rec-recD);
+    if(hot||++tk%5===0){const e2=estMSE();mseD=mseD==null?e2:mseD+(hot?.5:.25)*(e2-mseD)}
+    if(tk%25===0)l0=estL0();
+    P.base();
+    for(let i=0;i<6;i++){const c=BASE.model.col(i);if(Math.hypot(...c)>.4)P.arrow(c.map(v=>v/1.18),FC[i],{lw:7,alpha:.30})}
+    let live=0;
+    for(let j=0;j<K;j++){
+      const a=sae.atom(j,SW),dead=sae.usage[j]<.01;if(!dead&&!abl[j])live++;
+      if(abl[j]){
+        P.arrow(a.map(v=>v*.82),'#ff6b4a',{lw:2,alpha:.9,dash:[5,3]});
+        const[X,Y]=P.px([a[0]*.86,a[1]*.86]);
+        ctx.strokeStyle='#ff6b4a';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(X-4,Y-4);ctx.lineTo(X+4,Y+4);ctx.moveTo(X+4,Y-4);ctx.lineTo(X-4,Y+4);ctx.stroke();
+      }else P.arrow(a.map(v=>v*.82),dead?M.mut:M.ink,{lw:dead?1.5:2.5,alpha:dead?.45:.95,dash:dead?[4,4]:null});
+    }
+    recEl.textContent=(100*recD).toFixed(0)+'%';
+    liveEl.textContent=live+' / '+K;l0El.textContent=l0.toFixed(1);
+    if(mseEl)mseEl.textContent=mseD==null?'—':mseD.toFixed(3);
+    lamEl.textContent='λ = '+lam.toPrecision(2)+(hot?' · scalpel in — slow motion':'');
+  }};
+  register(root,w);
+})();
+
+// ---------- 0. hero: the superposition machine (immersive scene) ----------
+const NAMES=['citations','dialogue','HTTP','Korean','code','weather'];
+const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels debt chess typhoons haiku copper syntax tango glaciers probability garlic sonnets voltage camels metaphor Tuesday algebra perfume treaties whales sushi firewalls ballet neutrinos grief passports origami caffeine elections coral lullabies patents monsoons chemistry folklore spreadsheets tides opera bacteria currencies deserts nostalgia plumbing galaxies verbs insulin marathons puns vaccines poker lighthouses grammar meteors silk auctions pottery rivalry telescopes yeast contracts aurora dialects skyscrapers fossils recipes encryption harvest violins satire blueprints penguins calculus orchids radar proverbs cement butterflies inflation chopsticks thunder alibis kayaks melody quartz riddles subway honey equations parades wolves ledgers incense pixels anchors rumors cellos magnets dunes syllables barcodes embers').split(' ');
+(function(){
+  const root=$('#machine');if(!root)return;
+  const stage=root.querySelector('.scene-stage');
+  const BG='#14181a',RL='#2a3034',TX='#8fa097',TRK='#232a2e',TICK='#e8e4d8';
+  const S=280,OW=272;
+  const ch=root.querySelector('.c-ch'),cx=setupCanvas(ch,S,S);
+  const co=root.querySelector('.c-out'),ox=setupCanvas(co,OW,S);
+  const errEl=root.querySelector('.r-err'),subEl=root.querySelector('.subtitle'),skipB=root.querySelector('.b-skip');
+  const lamps=[...root.querySelectorAll('.lamps button')];
+  const manual=new Set();let pulses=[],t0ms=null,demo=true,si=0,lastAmb=0;
+  const SCRIPT=[                                  // wall-clock ms after training completes
+    {at:500,sub:'Every word drifting around you is something a network must remember.'},
+    {at:3200,sub:'This one has room for six — and only two neurons to keep them in. Watch:',fire:[0]},
+    {at:6200,fire:[2]},
+    {at:8200,sub:'…clean readout, every time. Six concepts, two neurons.',fire:[3]},
+    {at:10900,sub:'Now fire two at once:',fire:[1,4]},
+    {at:12500,sub:'✗ Crosstalk — they collided. This whole page is about that tradeoff.'},
+    {at:15200,sub:'Your turn. Click the lamps — can you find a pair that survives?',end:true},
+  ];
+  function endDemo(){demo=false;skipB.style.display='none'}
+  skipB.onclick=()=>{endDemo();pulses=[];subEl.textContent='Your turn. Click the lamps — can you find a pair that survives?'};
+  lamps.forEach(b=>b.onclick=()=>{
+    if(demo){endDemo();subEl.textContent=''}
+    const i=+b.dataset.i;manual.has(i)?manual.delete(i):manual.add(i);b.classList.toggle('on');pulses=[]});
+  root.querySelector('.b-clear').onclick=()=>{manual.clear();lamps.forEach(b=>b.classList.remove('on'))};
+  // --- word field (the model's world, drifting behind the machine) ---
+  const wf=root.querySelector('.wordfield'),wx=wf.getContext('2d');
+  let WW=0,WH=0,dpr=1,words=[];
+  function sizeWF(){
+    dpr=Math.min(devicePixelRatio||1,2);
+    WW=root.clientWidth;WH=root.clientHeight;
+    wf.width=WW*dpr;wf.height=WH*dpr;wx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function seedWords(){
+    const r=new RNG(99),n=innerWidth<760?55:WORDS.length;
+    words=[];
+    for(let i=0;i<n;i++)words.push({w:WORDS[i],x:r.next()*WW,y:r.next()*WH,z:.25+.75*r.next(),f:-1});
+    NAMES.forEach((w,i)=>words.push({w,x:r.next()*WW,y:r.next()*WH,z:.6+.4*r.next(),f:i}));
+  }
+  sizeWF();seedWords();
+  addEventListener('resize',()=>{sizeWF();seedWords()});
+  // --- pointer: parallax + stage tilt ---
+  let mx=0,my=0,tx=0,ty=0;
+  const fine=matchMedia('(pointer:fine)').matches&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(fine)root.addEventListener('pointermove',e=>{
+    const b=root.getBoundingClientRect();
+    mx=(e.clientX-b.left)/b.width*2-1;my=(e.clientY-b.top)/b.height*2-1;
+  });
+  // --- scroll cue ---
+  const cue=root.querySelector('.scroll-cue');
+  addEventListener('scroll',()=>cue.classList.add('hide'),{once:true,passive:true});
+  const x=new Float64Array(6),h=new Float64Array(2),z=new Float64Array(6);
+  const rm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function drawWords(){
+    wx.clearRect(0,0,WW,WH);
+    for(const o of words){
+      if(!rm){o.x+=.07*o.z;if(o.x>WW+60)o.x=-60}
+      const px=o.x+mx*o.z*26,py=o.y+my*o.z*16;
+      wx.font=(9.5+7*o.z)+'px -apple-system,sans-serif';
+      if(o.f>=0){const a=x[o.f]||0;
+        wx.fillStyle=FC[o.f];wx.globalAlpha=Math.min(1,.34+.3*o.z+.6*a);
+        wx.font=(9.5+7*o.z+6*a)+'px -apple-system,sans-serif';
+        if(a>.12){wx.shadowColor=FC[o.f];wx.shadowBlur=12}}
+      else{wx.fillStyle='#8d887c';wx.globalAlpha=.07+.13*o.z}
+      wx.fillText(o.w,px,py);wx.shadowBlur=0;
+    }
+    wx.globalAlpha=1;
+  }
+  function chBase(){
+    const c=S/2,R=S/2-26;
+    cx.fillStyle=BG;cx.fillRect(0,0,S,S);
+    cx.strokeStyle=RL;cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(c-R-12,c);cx.lineTo(c+R+12,c);cx.moveTo(c,c-R-12);cx.lineTo(c,c+R+12);cx.stroke();
+    cx.setLineDash([3,4]);cx.beginPath();cx.arc(c,c,R,0,7);cx.stroke();cx.setLineDash([]);
+    cx.fillStyle=TX;cx.font=SANS;cx.textAlign='left';
+    cx.fillText('neuron 1 →',c+R-56,c+15);
+    cx.save();cx.translate(c-7,c-R+58);cx.rotate(-Math.PI/2);cx.fillText('neuron 2 →',0,0);cx.restore();
+  }
+  function arrowD(vx,vy,color,lw,alpha){
+    const c=S/2,R=S/2-26,X=c+vx*R,Y=c-vy*R;
+    cx.strokeStyle=cx.fillStyle=color;cx.lineWidth=lw;cx.globalAlpha=alpha;
+    cx.beginPath();cx.moveTo(c,c);cx.lineTo(X,Y);cx.stroke();
+    const a=Math.atan2(Y-c,X-c),hs=4+lw;
+    cx.beginPath();cx.moveTo(X,Y);
+    cx.lineTo(X-hs*Math.cos(a-.45),Y-hs*Math.sin(a-.45));
+    cx.lineTo(X-hs*Math.cos(a+.45),Y-hs*Math.sin(a+.45));
+    cx.closePath();cx.fill();cx.globalAlpha=1;
+  }
+  const w={tick(){
+    BASE.tickTrain();
+    const m=BASE.model,now=performance.now();
+    if(BASE.done&&t0ms===null)t0ms=now;
+    const dms=t0ms===null?-1:now-t0ms;
+    // demo script (wall-clock so it's identical at any frame rate)
+    if(demo&&dms>=0&&si<SCRIPT.length&&dms>=SCRIPT[si].at){
+      const st=SCRIPT[si++];
+      if(st.sub)subEl.textContent=st.sub;
+      if(st.fire)st.fire.forEach(i=>pulses.push({i,s:now,dur:1400}));
+      if(st.end)endDemo();
+    }
+    // ambient auto-fire after demo
+    if(!demo&&manual.size===0&&dms>=0&&now-lastAmb>1900){
+      lastAmb=now;
+      const two=Math.random()<.2,i=Math.floor(Math.random()*5);
+      pulses.push({i,s:now,dur:1300});
+      if(two){let j=Math.floor(Math.random()*5);if(j===i)j=(j+1)%5;pulses.push({i:j,s:now,dur:1300})}
+    }
+    x.fill(0);for(const i of manual)x[i]=.7;
+    pulses=pulses.filter(p=>now-p.s<p.dur);
+    for(const p of pulses){const ph=(now-p.s)/p.dur;x[p.i]=Math.min(1,x[p.i]+.7*Math.sin(Math.PI*ph))}
+    lamps.forEach((b,i)=>b.classList.toggle('lit',x[i]>.12));
+    m.hidden(x,h);
+    for(let i=0;i<6;i++){let s2=m.theta[12+i];for(let a=0;a<2;a++)s2+=m.theta[a*6+i]*h[a];z[i]=Math.max(0,s2)}
+    // world + tilt
+    drawWords();
+    if(fine){tx+=((-my*3.2)-tx)*.06;ty+=((mx*4)-ty)*.06;
+      stage.style.transform=`perspective(1100px) rotateX(${tx.toFixed(2)}deg) rotateY(${ty.toFixed(2)}deg)`}
+    // channel
+    chBase();
+    for(let i=0;i<6;i++){const c=m.col(i);arrowD(c[0]/1.25,c[1]/1.25,FC[i],2,.3)}
+    let px=0,py=0;
+    const c0=S/2,R0=S/2-26;
+    for(let i=0;i<6;i++){
+      if(x[i]<.03)continue;const c=m.col(i),nx=px+x[i]*c[0]/1.25,ny=py+x[i]*c[1]/1.25;
+      cx.strokeStyle=FC[i];cx.lineWidth=6;cx.lineCap='round';
+      cx.shadowColor=FC[i];cx.shadowBlur=14;
+      cx.beginPath();cx.moveTo(c0+px*R0,c0-py*R0);cx.lineTo(c0+nx*R0,c0-ny*R0);cx.stroke();
+      cx.shadowBlur=0;px=nx;py=ny;
+    }
+    if(px||py){cx.fillStyle='#fff';cx.shadowColor='#fff';cx.shadowBlur=10;
+      cx.beginPath();cx.arc(c0+px*R0,c0-py*R0,4.5,0,7);cx.fill();cx.shadowBlur=0}
+    // output
+    ox.fillStyle=BG;ox.fillRect(0,0,OW,S);ox.font=SANS;
+    let worst=0,lost=false;
+    for(let i=0;i<6;i++){
+      const y0=26+i*42,d=Math.abs(x[i]-z[i]);
+      if(x[i]>.3&&m.colNorm(i)<.5)lost=true;
+      if(x[i]>.03||z[i]>.03)worst=Math.max(worst,d);
+      ox.fillStyle=TX;ox.textAlign='left';ox.fillText(NAMES[i],8,y0+10);
+      ox.fillStyle=TRK;ox.fillRect(76,y0,164,12);
+      if(z[i]>.005){ox.fillStyle=FC[i];ox.shadowColor=FC[i];ox.shadowBlur=7;
+        ox.fillRect(76,y0,164*Math.min(z[i],1.1),12);ox.shadowBlur=0}
+      ox.strokeStyle=TICK;ox.lineWidth=2;
+      const tx2=76+164*Math.min(x[i],1.1);
+      ox.beginPath();ox.moveTo(tx2,y0-3);ox.lineTo(tx2,y0+15);ox.stroke();
+      if(d>.28){ox.fillStyle='#ff6b4a';ox.beginPath();ox.arc(254,y0+6,3.5,0,7);ox.fill()}
+    }
+    if(!BASE.done){errEl.textContent='assembling the machine… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
+    else if(lost){errEl.textContent='✗ lost — the machine never stored this concept';errEl.style.color='#ff6b4a'}
+    else if(worst>.28){errEl.textContent='✗ crosstalk — concepts collided';errEl.style.color='#ff6b4a'}
+    else{errEl.textContent='✓ clean readout';errEl.style.color='#5ec99a'}
+  }};
+  window.__dbg.hero=()=>({t0ms,si,demo,pulses:pulses.length,words:words.length,skipShown:skipB.style.display!=='none'});
+  register(root,w);
+})();
+
+// ---------- scroll reveal + progress nav ----------
+(function(){
+  const rd=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!rd){
+    const els=[...document.querySelectorAll('figure.widget,.takeaway')];
+    els.forEach(e=>e.classList.add('reveal'));
+    const ro=new IntersectionObserver(es=>es.forEach(en=>{
+      if(en.isIntersecting){en.target.classList.add('in');ro.unobserve(en.target)}
+    }),{rootMargin:'0px 0px -6% 0px'});
+    els.forEach(e=>ro.observe(e));
+  }
+  const pa=document.querySelector('#primer-all');
+  if(pa)pa.onclick=()=>{
+    const ds=[...document.querySelectorAll('details.primer')],open=ds.some(d=>!d.open);
+    ds.forEach(d=>d.open=open);pa.textContent=open?'collapse all':'expand all';
+  };
+  const map=document.querySelector('#map');if(!map)return;
+  // specimen thumbnail: the machine (BASE), animated only while it trains, then frozen.
+  // The map also drives BASE training so §5/§6 are ready even if the reader skips the hero.
+  const scv=map.querySelector('canvas'),sx=setupCanvas(scv,118,118),sst=map.querySelector('.st');
+  function drawSpec(){
+    const S=118,c=S/2,R=S/2-9,m=BASE.model;
+    sx.clearRect(0,0,S,S);
+    sx.strokeStyle=M.rule;sx.lineWidth=1;
+    sx.beginPath();sx.moveTo(c-R,c);sx.lineTo(c+R,c);sx.moveTo(c,c-R);sx.lineTo(c,c+R);sx.stroke();
+    sx.setLineDash([2,3]);sx.beginPath();sx.arc(c,c,R,0,7);sx.stroke();sx.setLineDash([]);
+    for(let i=0;i<6;i++){
+      const v=m.col(i),X=c+v[0]/1.2*R,Y=c-v[1]/1.2*R;
+      sx.strokeStyle=sx.fillStyle=FC[i];sx.lineWidth=2;
+      sx.beginPath();sx.moveTo(c,c);sx.lineTo(X,Y);sx.stroke();
+      sx.beginPath();sx.arc(X,Y,2.5,0,7);sx.fill();
+    }
+  }
+  let specDone=false;
+  register(map,{tick(){
+    if(specDone)return;
+    BASE.tickTrain();drawSpec();
+    if(BASE.done){sst.textContent='trained · frozen';specDone=true}
+    else sst.textContent='training '+Math.round(100*BASE.model.steps/8000)+'%';
+  }});
+  // the map is redundant (and illegible) while the machine itself fills the screen
+  const heroSec=document.querySelector('#machine');
+  if(heroSec)new IntersectionObserver(e=>map.classList.toggle('off',e[0].isIntersecting),{threshold:.25}).observe(heroSec);
+  const links=[...map.querySelectorAll('nav a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+  const so=new IntersectionObserver(es=>es.forEach(en=>{
+    if(en.isIntersecting){const i=secs.indexOf(en.target);
+      links.forEach((l,j)=>l.classList.toggle('cur',j===i))}
+  }),{rootMargin:'-40% 0px -50% 0px'});
+  secs.forEach(s=>s&&so.observe(s));
+})();
+</script><!--/JS-->
+</body>
+</html>
