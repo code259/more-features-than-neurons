@@ -3,9 +3,9 @@ import{RNG,ToyModel,SAE,packScore,packGradStep}from'./core.js';
 // ---------- shared ----------
 const css=getComputedStyle(document.documentElement);
 const FC=[...Array(8)].map((_,i)=>css.getPropertyValue(`--f${i}`).trim());
-const INK='#1b211c',INK2='#78857a',RULE='#d4d9d0',ACC='#1b211c',GOOD='#2e7d5b';
+const INK='#0d0d0c',INK2='#84847f',RULE='#d6d6d2',ACC='#0d0d0c',GOOD='#0d0d0c';
 // machine-world canvas palette (dark instrument panels)
-const M={ink:'#eef0ea',mut:'#93a396',rule:'#38443b',grid:'#242e27'};
+const M={ink:'#f2f2f0',mut:'#8a8a86',rule:'#2b2b29',grid:'#191918'};
 const SANS='11px "IBM Plex Mono",ui-monospace,Menlo,monospace';
 
 function setupCanvas(c,w,h){
@@ -206,7 +206,7 @@ const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']]
   function strip(u){
     sx.clearRect(0,0,250,96);sx.font=SANS;sx.textAlign='center';
     REGIONS.forEach(([a,b,t],i)=>{
-      sx.fillStyle=['#232d26','#2a362d','#323f35','#3b4a3e'][i];
+      sx.fillStyle=['#161615','#1e1e1c','#262624','#2f2f2c'][i];
       sx.fillRect(8+a*234,14,(b-a)*234,30);
       sx.fillStyle=M.mut;sx.fillText(t,8+(a+b)/2*234,34);
     });
@@ -423,7 +423,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
 (function(){
   const root=$('#machine');if(!root)return;
   const stage=root.querySelector('.scene-stage');
-  const BG='#1e2620',RL='#38443b',TX='#93a396',TRK='#2b352e',TICK='#eef0ea';
+  const BG='#0d0d0c',RL='#2b2b29',TX='#8a8a86',TRK='#1e1e1c',TICK='#f2f2f0';
   const S=280,OW=272;
   const ch=root.querySelector('.c-ch'),cx=setupCanvas(ch,S,S);
   const co=root.querySelector('.c-out'),ox=setupCanvas(co,OW,S);
@@ -483,7 +483,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
         wx.fillStyle=FC[o.f];wx.globalAlpha=Math.min(1,.34+.3*o.z+.6*a);
         wx.font=(9.5+7*o.z+6*a)+'px -apple-system,sans-serif';
         if(a>.12){wx.shadowColor=FC[o.f];wx.shadowBlur=12}}
-      else{wx.fillStyle='#7d8c80';wx.globalAlpha=.07+.13*o.z}
+      else{wx.fillStyle='#7a7a76';wx.globalAlpha=.07+.13*o.z}
       wx.fillText(o.w,px,py);wx.shadowBlur=0;
     }
     wx.globalAlpha=1;
@@ -570,7 +570,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
     if(!BASE.done){errEl.textContent='assembling the model… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
     else if(lost){errEl.textContent='✗ lost — the model never stored this concept';errEl.style.color='#ff8a63'}
     else if(worst>.28){errEl.textContent='✗ crosstalk — concepts collided';errEl.style.color='#ff8a63'}
-    else{errEl.textContent='✓ clean readout';errEl.style.color='#a9c79a'}
+    else{errEl.textContent='✓ clean readout';errEl.style.color='#f2f2f0'}
   }};
   window.__dbg.hero=()=>({t0ms,si,demo,pulses:pulses.length,words:words.length,skipShown:skipB.style.display!=='none'});
   register(root,w);

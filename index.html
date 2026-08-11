@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>More Features Than Neurons — An Interactive Tour of Superposition</title>
 <meta name="description" content="An interactive explainer: how neural networks cram more concepts into fewer dimensions, why that makes them hard to read, and how sparse autoencoders unscramble the mess. Every experiment runs live in your browser.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231e2620'/%3E%3Cg stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='16' y1='16' x2='16' y2='5' stroke='%23e0a300'/%3E%3Cline x1='16' y1='16' x2='26.5' y2='12.6' stroke='%232a7de1'/%3E%3Cline x1='16' y1='16' x2='22.5' y2='24.9' stroke='%23e0532f'/%3E%3Cline x1='16' y1='16' x2='9.5' y2='24.9' stroke='%2319a77f'/%3E%3Cline x1='16' y1='16' x2='5.5' y2='12.6' stroke='%238e5bd0'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d0d0c'/%3E%3Cg stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='16' y1='16' x2='16' y2='5' stroke='%23e0a300'/%3E%3Cline x1='16' y1='16' x2='26.5' y2='12.6' stroke='%232a7de1'/%3E%3Cline x1='16' y1='16' x2='22.5' y2='24.9' stroke='%23e0532f'/%3E%3Cline x1='16' y1='16' x2='9.5' y2='24.9' stroke='%2319a77f'/%3E%3Cline x1='16' y1='16' x2='5.5' y2='12.6' stroke='%238e5bd0'/%3E%3C/g%3E%3C/svg%3E">
 <meta property="og:type" content="article">
 <meta property="og:title" content="More Features Than Neurons">
 <meta property="og:description" content="Why single neurons mean several things at once, and how sparsity both causes the problem and cures it. Every experiment trains live in your browser.">
@@ -28,14 +28,14 @@
 @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/plexmono-600.woff2) format('woff2')}
 
 :root{
-  /* the human world — cool paper, green-black ink */
-  --bg:#eef0ea; --ink:#1b211c; --ink2:#56605a; --rule:#d4d9d0; --card:#e2e7dc;
-  --paper:#f7f8f4;
-  /* the machine world — deep forest */
-  --m-bg:#1e2620; --m-card:#27312a; --m-rule:#38443b; --m-text:#93a396; --m-bright:#eef0ea;
+  /* the human world — stark paper, near-black ink */
+  --bg:#f2f2f0; --ink:#0d0d0c; --ink2:#6e6e6a; --rule:#d6d6d2; --card:#e7e7e3;
+  --paper:#fafaf8;
+  /* the machine world — near-black */
+  --m-bg:#0d0d0c; --m-card:#171716; --m-rule:#2b2b29; --m-text:#8a8a86; --m-bright:#f2f2f0;
   /* semantic only */
-  --live:#a9c79a; --good:#2e7d5b; --bad:#b4482a; --bad-d:#ff6b4a;
-  --accent:#1b211c;
+  --live:#d8d8d4; --good:#0d0d0c; --bad:#b4351d; --bad-d:#ff6b4a;
+  --accent:#0d0d0c;
   /* feature identity — the only saturated colors on the page */
   --f0:#e0a300; --f1:#2a7de1; --f2:#e0532f; --f3:#19a77f; --f4:#8e5bd0; --f5:#d14a8e; --f6:#3bb8c9; --f7:#8a7a5c;
   --serif:'Newsreader',Georgia,'Times New Roman',serif;
@@ -47,28 +47,28 @@ html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:20px;line-height:1.62;font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
 header.masthead{max-width:680px;margin:0 auto;padding:72px 20px 8px}
 .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);font-weight:600}
-h1{font-size:46px;line-height:1.1;margin:10px 0 14px;font-weight:600;letter-spacing:-.015em}
+h1{font-size:60px;line-height:1.02;margin:10px 0 18px;font-weight:500;letter-spacing:-.035em}
 .dek{font-size:22px;line-height:1.5;color:var(--ink2);margin:0 0 26px;font-style:italic}
 .byline{font-family:var(--mono);font-size:12.5px;color:var(--ink2);border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);padding:10px 0;display:flex;gap:18px;flex-wrap:wrap}
 .byline b{color:var(--ink);font-weight:600}
 main{max-width:680px;margin:0 auto;padding:0 20px 80px}
-section{margin-top:60px}
-h2{font-size:31px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;font-weight:600}
-h2 .secno{font-family:var(--mono);font-size:.5em;font-weight:600;letter-spacing:.12em;color:var(--ink2);vertical-align:.45em;margin-right:10px}
+section{margin-top:76px;border-top:1px solid var(--ink);padding-top:22px}
+h2{font-size:42px;line-height:1.04;margin:0 0 10px;letter-spacing:-.035em;font-weight:500}
+h2 .secno{font-family:var(--mono);font-size:.28em;font-weight:600;letter-spacing:.16em;color:var(--ink2);vertical-align:.9em;margin-right:14px}
 h3{font-size:21px;margin:30px 0 6px;font-weight:600}
 p{margin:14px 0}
-a{color:var(--ink);text-decoration-color:#b3bcb2;text-underline-offset:2.5px}
+a{color:var(--ink);text-decoration-color:#9c9c98;text-underline-offset:2.5px}
 a:hover{text-decoration-color:var(--ink)}
-em.term{font-style:normal;background:linear-gradient(transparent 68%,#dae3d1 68%);padding:0 2px}
+em.term{font-style:normal;box-shadow:inset 0 -0.42em 0 #e2e2dd;padding:0 2px}
 .math{font-style:italic;white-space:nowrap}
 .math sup,.math sub{font-size:.72em}
-mark{background:#dde5d5;padding:0 2px;border-radius:2px}
+mark{background:#e4e4df;padding:0 2px;border-radius:0}
 .chip{display:inline-block;font-family:var(--mono);font-size:.66em;font-weight:600;color:#fff;padding:1px 8px 2px;border-radius:99px;vertical-align:1px;letter-spacing:.02em}
-.takeaway{background:var(--card);border-left:3px solid var(--ink);padding:14px 18px;margin:26px 0;font-size:18.5px}
+.takeaway{background:transparent;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);padding:14px 0;margin:30px 0;font-size:18.5px}
 .takeaway b{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:4px;font-weight:600}
 .aside{font-size:16.5px;color:var(--ink2);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:12px 2px;margin:24px 0}
 /* ---------- widgets: paper instruments ---------- */
-figure.widget{margin:30px -40px;background:var(--paper);border:1px solid var(--rule);border-radius:10px;font-family:var(--mono);overflow:hidden}
+figure.widget{margin:34px -40px;background:var(--paper);border:1px solid var(--ink);border-radius:0;font-family:var(--mono);overflow:hidden}
 @media(max-width:800px){figure.widget{margin:30px -10px}}
 .w-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 18px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
 .w-title{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
@@ -76,42 +76,42 @@ figure.widget{margin:30px -40px;background:var(--paper);border:1px solid var(--r
 .w-col{display:flex;flex-direction:column;gap:8px;align-items:center}
 .w-col .lbl{font-size:11px;color:var(--ink2);font-weight:400;letter-spacing:.01em}
 figcaption{font-family:var(--serif);font-size:16px;color:var(--ink2);padding:12px 18px 16px;border-top:1px dashed var(--rule);line-height:1.5;background:var(--paper)}
-canvas{display:block;touch-action:none;border-radius:6px}
+canvas{display:block;touch-action:none;border-radius:0}
 canvas.grabbable{cursor:grab}
-.btn{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;padding:7px 13px;border-radius:6px;border:1px solid #c2c8bd;background:transparent;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
-.btn:hover{border-color:var(--ink)}
+.btn{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;padding:7px 13px;border-radius:0;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
+.btn:hover{background:var(--ink);color:var(--bg)}
 .btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .btn.primary:hover{background:#000}
 .btn:disabled{opacity:.45;cursor:default}
 .ctrl{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink2);font-weight:400}
 input[type=range]{accent-color:var(--ink);width:170px}
 .scorebox{display:flex;gap:14px}
-.score{background:var(--card);border-radius:8px;padding:8px 14px;min-width:108px;text-align:center}
+.score{background:var(--card);border-radius:0;padding:8px 14px;min-width:108px;text-align:center}
 .score .v{font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
 .score .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:600}
 .score.win .v{color:var(--good)}
-.toggle{display:flex;border:1px solid #c2c8bd;border-radius:6px;overflow:hidden}
+.toggle{display:flex;border:1px solid var(--ink);border-radius:0;overflow:hidden}
 .toggle button{font-family:var(--mono);font-size:12px;font-weight:600;border:0;background:transparent;color:var(--ink2);padding:7px 13px;cursor:pointer}
 .toggle button.on{background:var(--ink);color:var(--bg)}
 .readout{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--ink2);align-items:center}
-.legend .sw{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:-1px}
+.legend .sw{width:11px;height:11px;border-radius:0;display:inline-block;margin-right:4px;vertical-align:-1px}
 /* live / frozen indicator */
 .ind{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--ink2)}
 .ind i{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block}
-.ind.frozen i{background:#6d7a70}
+.ind.frozen i{background:#5c5c58}
 /* ---------- machine-world figures: dark instrument panels ---------- */
-figure.widget.machine{border-color:#2c3730;background:var(--m-bg)}
+figure.widget.machine{border-color:var(--ink);background:var(--m-bg)}
 .machine .w-head{background:var(--m-bg);border-bottom:1px solid var(--m-rule)}
 .machine .w-title{color:var(--m-text)}
 .machine .readout{color:var(--m-text)}
 .machine .readout b{color:var(--m-bright)}
-.machine .readout a{color:var(--m-bright);text-decoration-color:#65746a}
+.machine .readout a{color:var(--m-bright);text-decoration-color:#6a6a66}
 .machine .w-body{background:var(--m-bg)}
 .machine .w-col .lbl{color:var(--m-text)}
-.machine .btn{border-color:#445147;color:var(--m-text);background:transparent}
-.machine .btn:hover{border-color:var(--m-bright);color:var(--m-bright)}
-.machine .toggle{border-color:#445147}
+.machine .btn{border-color:var(--m-rule);color:var(--m-text);background:transparent}
+.machine .btn:hover{background:var(--m-bright);color:var(--m-bg);border-color:var(--m-bright)}
+.machine .toggle{border-color:var(--m-rule)}
 .machine .toggle button{background:transparent;color:var(--m-text)}
 .machine .toggle button.on{background:var(--m-bright);color:var(--m-bg)}
 .machine .ctrl{color:var(--m-text)}
@@ -122,26 +122,27 @@ figure.widget.machine{border-color:#2c3730;background:var(--m-bg)}
 .machine .score.win .v{color:var(--live)}
 .machine .ind{color:var(--m-text)}
 .machine .who{background:var(--m-card);border-color:var(--m-rule);color:var(--m-text)}
-.machine .who.m{color:var(--m-bright);border-color:#54635a}
+.machine .who.m{color:var(--m-bright);border-color:#3a3a37}
 .machine figcaption{background:var(--paper)}
 /* widget provenance badge: the machine itself vs. a sibling experiment */
 .who{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:99px;padding:3px 10px;white-space:nowrap}
-.who.m{color:var(--ink);border-color:#9fab9f}
+.who.m{color:var(--ink);border-color:#9c9c98}
 /* record cards (real-model activation records) */
 .snips{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 18px}
 @media(max-width:620px){.snips{grid-template-columns:1fr}}
-.snip{background:var(--card);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#3f4a42}
+*{}
+.snip{background:var(--card);border-radius:0;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#3c3c39}
 .snip .tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:6px}
 .machine .snips{background:var(--m-bg)}
 .machine .snip{background:var(--m-card);color:var(--m-text)}
-.machine .snip .tag{color:#7d8c80}
-.snip .tk{border-radius:3px;padding:0 1px;background:rgba(238,240,234,calc(var(--a)*.35));cursor:default}
-.snip .tk.hi{background:rgba(238,240,234,calc(.3 + var(--a)*.62));color:#14181a}
+.machine .snip .tag{color:#7a7a76}
+.snip .tk{border-radius:0;padding:0 1px;background:rgba(242,242,240,calc(var(--a)*.35));cursor:default}
+.snip .tk.hi{background:rgba(242,242,240,calc(.3 + var(--a)*.62));color:#14181a}
 /* try line: one concrete action per instrument */
 .try{display:flex;gap:10px;align-items:baseline;padding:10px 18px;border-top:1px dashed var(--rule);font-family:var(--serif);font-size:15.5px;color:var(--ink2);background:var(--paper)}
-.try b{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--ink);border:1px solid #c2c8bd;border-radius:99px;padding:2px 8px;flex-shrink:0}
+.try b{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--ink);border:1px solid var(--ink);border-radius:99px;padding:2px 8px;flex-shrink:0}
 /* reproduction checklist */
-.repro{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 18px;font-family:var(--mono);font-size:13px;line-height:2;color:var(--ink2);margin:16px 0}
+.repro{background:var(--card);border:1px solid var(--rule);border-radius:0;padding:12px 18px;font-family:var(--mono);font-size:13px;line-height:2;color:var(--ink2);margin:16px 0}
 .repro b{color:var(--ink);font-weight:600}
 .repro .ok{color:var(--good);font-weight:600}
 /* model diagram */
@@ -153,10 +154,10 @@ footer h3{font-size:16px}
 ol.refs{padding-left:20px;font-size:15px;line-height:1.55}
 ol.refs li{margin-bottom:6px}
 .fin{text-align:center;color:#c2c8bd;font-size:24px;letter-spacing:.4em;margin:50px 0 0}
-@media(max-width:640px){h1{font-size:34px}.dek{font-size:19px}body{font-size:18px}}
+@media(max-width:640px){h1{font-size:38px}h2{font-size:29px}h2 .secno{font-size:.32em;margin-right:9px}.dek{font-size:19px}body{font-size:18px}figure.widget{margin:26px -10px}}
 /* hero machine */
 .lamps{display:flex;flex-direction:column;gap:7px;min-width:130px}
-.lamps button{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:7px 12px;cursor:pointer;transition:all .12s}
+.lamps button{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:0;padding:7px 12px;cursor:pointer;transition:all .12s}
 .lamps button i{width:12px;height:12px;border-radius:50%;display:inline-block;opacity:.45;transition:all .12s}
 .lamps button:hover{border-color:var(--ink)}
 .lamps button.on{color:var(--ink);border-color:var(--ink);background:#fff}
@@ -167,7 +168,7 @@ ol.refs li{margin-bottom:6px}
 /* story map: the specimen + the argument, always in view (wide screens) */
 #map{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:9;width:170px;font-family:var(--mono);transition:opacity .45s}
 #map.off{opacity:0;pointer-events:none}
-#map .spec-card{display:block;background:var(--m-bg);border:1px solid #2c3730;border-radius:8px;padding:9px 8px 7px;text-align:center;text-decoration:none;margin-bottom:10px}
+#map .spec-card{display:block;background:var(--m-bg);border:1px solid #2c3730;border-radius:0;padding:9px 8px 7px;text-align:center;text-decoration:none;margin-bottom:10px}
 #map .spec-card:hover{border-color:var(--m-text)}
 #map .spec-card canvas{margin:0 auto}
 #map .spec-card .k{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--m-bright);display:block;margin-top:5px}
@@ -186,7 +187,7 @@ ol.refs li{margin-bottom:6px}
 .scene-inner{position:relative;z-index:2;width:100%;max-width:1060px;margin:0 auto;padding:34px 28px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
 .scene-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
 .scene-title .kicker{color:var(--m-text)}
-.scene-title h1{color:var(--m-bright);font-size:44px;margin:8px 0 10px;max-width:560px;text-shadow:0 2px 30px rgba(0,0,0,.6)}
+.scene-title h1{color:var(--m-bright);font-size:62px;line-height:1;letter-spacing:-.04em;font-weight:500;margin:12px 0 14px;max-width:620px}
 .scene-dek{font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.55;color:var(--m-text);max-width:470px;margin:0}
 .scene-dek b{color:var(--m-bright)}
 .scene-hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
@@ -196,12 +197,12 @@ ol.refs li{margin-bottom:6px}
 .scene-stage{display:flex;gap:26px;align-items:center;justify-content:center;flex-wrap:wrap;will-change:transform;transform-style:preserve-3d}
 .scene-stage .w-col{gap:10px}
 .scene-stage .lbl{color:var(--m-text)}
-.scene-stage canvas{box-shadow:0 18px 60px rgba(0,0,0,.55);border:1px solid #2c3730;border-radius:10px}
+.scene-stage canvas{border:1px solid var(--m-rule);border-radius:0}
 .scene-stage .lamps{display:flex;flex-direction:column;gap:8px;min-width:140px}
-.scene-stage .lamps button{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:8px;padding:9px 14px;cursor:pointer;transition:all .12s}
+.scene-stage .lamps button{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:0;padding:9px 14px;cursor:pointer;transition:all .12s}
 .scene-stage .lamps button i{width:12px;height:12px;border-radius:50%;display:inline-block;opacity:.45;transition:all .12s}
 .scene-stage .lamps button:hover{border-color:var(--m-bright);color:var(--m-bright)}
-.scene-stage .lamps button.on{background:#2b352e;border-color:var(--m-bright);color:var(--m-bright)}
+.scene-stage .lamps button.on{background:#1d1d1c;border-color:var(--m-bright);color:var(--m-bright)}
 .scene-stage .lamps button.lit i{opacity:1;box-shadow:0 0 12px 2px currentColor}
 .scene-stage .subtitle{flex-basis:100%;text-align:center;font-family:var(--serif);font-size:17px;font-weight:400;font-style:italic;color:var(--m-bright);min-height:26px;padding:4px 10px;text-shadow:0 1px 12px rgba(0,0,0,.7)}
 .scroll-cue{align-self:center;text-align:center;font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--m-text);padding-bottom:6px;transition:opacity .5s}
@@ -215,7 +216,7 @@ ol.refs li{margin-bottom:6px}
 .bridge{font-size:20px;line-height:1.6;font-style:italic;color:var(--ink2);margin:22px 0 0}
 .bridge b{color:var(--ink)}
 /* primer cards */
-details.primer{background:var(--card);border:1px solid var(--rule);border-radius:8px;margin:22px 0;font-size:17px;line-height:1.55}
+details.primer{background:var(--card);border:1px solid var(--rule);border-radius:0;margin:22px 0;font-size:17px;line-height:1.55}
 details.primer summary{cursor:pointer;font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.04em;color:var(--ink);padding:11px 16px;list-style:none;display:flex;gap:9px;align-items:baseline}
 details.primer summary::-webkit-details-marker{display:none}
 details.primer summary::before{content:'⊕';font-size:15px;flex-shrink:0;transition:transform .2s}
@@ -378,17 +379,17 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
   <figure class="widget">
     <div class="diagram">
       <svg viewBox="0 0 640 150" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11.5">
-        <g fill="#5f5a4e"><text x="60" y="20" text-anchor="middle">input x — 6 features</text><text x="320" y="20" text-anchor="middle">hidden h = Wx — 2 neurons</text><text x="580" y="20" text-anchor="middle">output x′ = ReLU(Wᵀh + b)</text></g>
+        <g fill="#6e6e6a"><text x="60" y="20" text-anchor="middle">input x — 6 features</text><text x="320" y="20" text-anchor="middle">hidden h = Wx — 2 neurons</text><text x="580" y="20" text-anchor="middle">output x′ = ReLU(Wᵀh + b)</text></g>
         <g>
           <circle cx="60" cy="40" r="9" fill="var(--f0)"/><circle cx="60" cy="58" r="9" fill="var(--f1)"/><circle cx="60" cy="76" r="9" fill="var(--f2)"/><circle cx="60" cy="94" r="9" fill="var(--f3)"/><circle cx="60" cy="112" r="9" fill="var(--f4)"/><circle cx="60" cy="130" r="9" fill="var(--f5)"/>
-          <circle cx="320" cy="68" r="11" fill="#1c1b18"/><circle cx="320" cy="100" r="11" fill="#1c1b18"/>
+          <circle cx="320" cy="68" r="11" fill="#0d0d0c"/><circle cx="320" cy="100" r="11" fill="#0d0d0c"/>
           <circle cx="580" cy="40" r="9" fill="var(--f0)"/><circle cx="580" cy="58" r="9" fill="var(--f1)"/><circle cx="580" cy="76" r="9" fill="var(--f2)"/><circle cx="580" cy="94" r="9" fill="var(--f3)"/><circle cx="580" cy="112" r="9" fill="var(--f4)"/><circle cx="580" cy="130" r="9" fill="var(--f5)"/>
         </g>
-        <g stroke="#c9c2b2" stroke-width="1">
+        <g stroke="#b9b9b5" stroke-width="1">
           <line x1="75" y1="40" x2="305" y2="66"/><line x1="75" y1="58" x2="305" y2="68"/><line x1="75" y1="76" x2="305" y2="72"/><line x1="75" y1="94" x2="305" y2="96"/><line x1="75" y1="112" x2="305" y2="100"/><line x1="75" y1="130" x2="305" y2="104"/>
           <line x1="335" y1="66" x2="565" y2="40"/><line x1="335" y1="68" x2="565" y2="58"/><line x1="335" y1="72" x2="565" y2="76"/><line x1="335" y1="96" x2="565" y2="94"/><line x1="335" y1="100" x2="565" y2="112"/><line x1="335" y1="104" x2="565" y2="130"/>
         </g>
-        <g fill="#191813" font-weight="600"><text x="190" y="120">W (compress)</text><text x="420" y="120">Wᵀ (reconstruct)</text></g>
+        <g fill="#0d0d0c" font-weight="600"><text x="190" y="120">W (compress)</text><text x="420" y="120">Wᵀ (reconstruct)</text></g>
       </svg>
     </div>
     <figcaption>Six sparse features get squeezed through two hidden neurons, then reconstructed. The i-th column of W is exactly the arrow you were dragging in the game — the direction in hidden space where feature i lives. Training minimizes importance-weighted reconstruction error.</figcaption>
@@ -778,9 +779,9 @@ const REALFEATURES=[{"id":"#650","idx":650,"label":"economic weakness","url":"ht
 // ---------- shared ----------
 const css=getComputedStyle(document.documentElement);
 const FC=[...Array(8)].map((_,i)=>css.getPropertyValue(`--f${i}`).trim());
-const INK='#1b211c',INK2='#78857a',RULE='#d4d9d0',ACC='#1b211c',GOOD='#2e7d5b';
+const INK='#0d0d0c',INK2='#84847f',RULE='#d6d6d2',ACC='#0d0d0c',GOOD='#0d0d0c';
 // machine-world canvas palette (dark instrument panels)
-const M={ink:'#eef0ea',mut:'#93a396',rule:'#38443b',grid:'#242e27'};
+const M={ink:'#f2f2f0',mut:'#8a8a86',rule:'#2b2b29',grid:'#191918'};
 const SANS='11px "IBM Plex Mono",ui-monospace,Menlo,monospace';
 
 function setupCanvas(c,w,h){
@@ -981,7 +982,7 @@ const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']]
   function strip(u){
     sx.clearRect(0,0,250,96);sx.font=SANS;sx.textAlign='center';
     REGIONS.forEach(([a,b,t],i)=>{
-      sx.fillStyle=['#232d26','#2a362d','#323f35','#3b4a3e'][i];
+      sx.fillStyle=['#161615','#1e1e1c','#262624','#2f2f2c'][i];
       sx.fillRect(8+a*234,14,(b-a)*234,30);
       sx.fillStyle=M.mut;sx.fillText(t,8+(a+b)/2*234,34);
     });
@@ -1198,7 +1199,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
 (function(){
   const root=$('#machine');if(!root)return;
   const stage=root.querySelector('.scene-stage');
-  const BG='#1e2620',RL='#38443b',TX='#93a396',TRK='#2b352e',TICK='#eef0ea';
+  const BG='#0d0d0c',RL='#2b2b29',TX='#8a8a86',TRK='#1e1e1c',TICK='#f2f2f0';
   const S=280,OW=272;
   const ch=root.querySelector('.c-ch'),cx=setupCanvas(ch,S,S);
   const co=root.querySelector('.c-out'),ox=setupCanvas(co,OW,S);
@@ -1258,7 +1259,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
         wx.fillStyle=FC[o.f];wx.globalAlpha=Math.min(1,.34+.3*o.z+.6*a);
         wx.font=(9.5+7*o.z+6*a)+'px -apple-system,sans-serif';
         if(a>.12){wx.shadowColor=FC[o.f];wx.shadowBlur=12}}
-      else{wx.fillStyle='#7d8c80';wx.globalAlpha=.07+.13*o.z}
+      else{wx.fillStyle='#7a7a76';wx.globalAlpha=.07+.13*o.z}
       wx.fillText(o.w,px,py);wx.shadowBlur=0;
     }
     wx.globalAlpha=1;
@@ -1345,7 +1346,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
     if(!BASE.done){errEl.textContent='assembling the model… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
     else if(lost){errEl.textContent='✗ lost — the model never stored this concept';errEl.style.color='#ff8a63'}
     else if(worst>.28){errEl.textContent='✗ crosstalk — concepts collided';errEl.style.color='#ff8a63'}
-    else{errEl.textContent='✓ clean readout';errEl.style.color='#a9c79a'}
+    else{errEl.textContent='✓ clean readout';errEl.style.color='#f2f2f0'}
   }};
   window.__dbg.hero=()=>({t0ms,si,demo,pulses:pulses.length,words:words.length,skipShown:skipB.style.display!=='none'});
   register(root,w);
