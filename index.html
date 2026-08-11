@@ -859,7 +859,7 @@ function ema(dst,src,a){
 }
 const EMA_W=.12;   // weight-display smoothing per frame
 
-// ---------- real-model record browsers (§0 raw neurons, §6 dictionary atoms) ----------
+// ---------- real-model record browsers (raw neurons at the top, dictionary atoms at the end) ----------
 function recordBrowser(root,items,label){
   const box=root.querySelector('.snips'),nameEl=root.querySelector('.n-name'),valEl=root.querySelector('.n-val');
   let cur=0;
@@ -1074,7 +1074,7 @@ const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']]
   register(root,w);
 })();
 
-// ---------- shared frozen base model (pentagon) for §5/§6 ----------
+// ---------- shared frozen base model (pentagon) for polysemanticity + SAE ----------
 const BASE={model:new ToyModel({n:6,m:2,p:.03,importance:[1,.93,.86,.8,.74,.69],seed:5}),done:false,subs:[]};
 window.__dbg.BASE=BASE;
 BASE.tickTrain=()=>{ if(BASE.done)return;
@@ -1369,7 +1369,7 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
   };
   const map=document.querySelector('#map');if(!map)return;
   // specimen thumbnail: the model (BASE), animated only while it trains, then frozen.
-  // The map also drives BASE training so §5/§6 are ready even if the reader skips the hero.
+  // The map also drives BASE training so the later sections are ready even if the reader skips the hero.
   const scv=map.querySelector('canvas'),sx=setupCanvas(scv,118,118),sst=map.querySelector('.st');
   function drawSpec(){
     const S=118,c=S/2,R=S/2-9,m=BASE.model;
