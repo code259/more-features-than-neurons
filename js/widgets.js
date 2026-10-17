@@ -182,14 +182,14 @@ function recordBrowser(root,items,label){
     for(let i=0;i<6;i++)P.arrow(model.col(i,S),FC[i],{lw:2.5});
     drawBars(bx,250,300,[...Array(6)].map((_,i)=>model.colNorm(i,S)),FC,{target:1,targetLabel:'goal',pal:M});
     lossEl.textContent=fmt(lossD,4);stepEl.textContent=model.steps.toLocaleString();
-    if(ind){const live=model.steps<12000;ind.classList.toggle('frozen',!live);indB.textContent=live?'LIVE':'CONVERGED'}
+    if(ind){const live=model.steps<12000;ind.classList.toggle('frozen',!live);indB.textContent=live?'live':'converged'}
   }};
   build();register(root,w);
 })();
 
 // ---------- 3. sparsity dial ----------
 // boundaries measured: 9k-step training, 3 seeds per point (see test sweep)
-const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']];
+const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 (pentagon)']];
 (function(){
   const root=$('#w-sparsity');if(!root)return;
   const Id=[1,.93,.86,.8,.74,.69];let seed=5;
@@ -271,7 +271,7 @@ const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']]
       ctx.beginPath();ctx.arc(X,Y,4.5,0,7);ctx.fill();ctx.globalAlpha=1;
     }
   }
-  const REF=[[1,'1 — own dimension'],[.5,'1/2 — antipodal pair'],[.375,'3/8 — antiprism'],[0,'0 — dropped']];
+  const REF=[[1,'1: own dimension'],[.5,'1/2: opposite pair'],[.375,'3/8: antiprism'],[0,'0: dropped']];
   function drawHist(){
     hx.clearRect(0,0,330,300);hx.font=SANS;
     const L=36,T=12,W2=330-L-10,H2=300-T-26,ymax=1.08;
@@ -321,7 +321,7 @@ BASE.tickTrain=()=>{ if(BASE.done)return;
     for(let a=0;a<2;a++){
       const ox=a*285+10,mid=135;
       ctx.fillStyle=M.ink;ctx.textAlign='left';ctx.font='600 '+SANS;
-      ctx.fillText(`neuron ${a+1} — weight per feature`,ox+8,18);ctx.font=SANS;
+      ctx.fillText(`neuron ${a+1}: weight per feature`,ox+8,18);ctx.font=SANS;
       ctx.strokeStyle=M.rule;ctx.beginPath();ctx.moveTo(ox+8,mid);ctx.lineTo(ox+262,mid);ctx.stroke();
       for(let i=0;i<6;i++){
         const v=m.theta[a*6+i],h=v*52,x=ox+18+i*41;
@@ -387,7 +387,7 @@ BASE.tickTrain=()=>{ if(BASE.done)return;
   }
   const w={tick(){
     BASE.tickTrain();
-    if(ind){ind.classList.toggle('frozen',!BASE.done);indB.textContent=BASE.done?'LIVE':'WAITING'}
+    if(ind){ind.classList.toggle('frozen',!BASE.done);indB.textContent=BASE.done?'live':'waiting'}
     if(!BASE.done)return;
     if(!sae)sae=new SAE({k:K,m:2,lam,seed:7});
     const hot=abl.some(x=>x);          // scalpel in: slow motion, so the wound and the healing are visible
@@ -412,7 +412,7 @@ BASE.tickTrain=()=>{ if(BASE.done)return;
     recEl.textContent=(100*recD).toFixed(0)+'%';
     liveEl.textContent=live+' / '+K;l0El.textContent=l0.toFixed(1);
     if(mseEl)mseEl.textContent=mseD==null?'—':mseD.toFixed(3);
-    lamEl.textContent='λ = '+lam.toPrecision(2)+(hot?' · scalpel in — slow motion':'');
+    lamEl.textContent='λ = '+lam.toPrecision(2)+(hot?' · atom ablated, training slowed down':'');
   }};
   register(root,w);
 })();
@@ -431,16 +431,16 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
   const lamps=[...root.querySelectorAll('.lamps button')];
   const manual=new Set();let pulses=[],t0ms=null,demo=true,si=0,lastAmb=0;
   const SCRIPT=[                                  // wall-clock ms after training completes
-    {at:500,sub:'Every word drifting around you is something a network must remember.'},
-    {at:3200,sub:'This one has room for six — and only two neurons to keep them in. Watch:',fire:[0]},
+    {at:500,sub:'Each drifting word stands for something a language model has to keep track of.'},
+    {at:3200,sub:'This network stores six concepts using two neurons. Here it is reading one back.',fire:[0]},
     {at:6200,fire:[2]},
-    {at:8200,sub:'…clean readout, every time. Six concepts, two neurons.',fire:[3]},
-    {at:10900,sub:'Now fire two at once:',fire:[1,4]},
-    {at:12500,sub:'✗ Crosstalk — they collided. This whole page is about that tradeoff.'},
-    {at:15200,sub:'Your turn. Click the lamps — can you find a pair that survives?',end:true},
+    {at:8200,sub:'When a concept fires on its own, it comes back out correctly.',fire:[3]},
+    {at:10900,sub:'Here are two concepts firing at the same time.',fire:[1,4]},
+    {at:12500,sub:'✗ The two interfered and the readout went wrong. The rest of this page explains why.'},
+    {at:15200,sub:'Click the buttons on the left to fire concepts yourself, and see if you can find a pair that reads back correctly.',end:true},
   ];
   function endDemo(){demo=false;skipB.style.display='none'}
-  skipB.onclick=()=>{endDemo();pulses=[];subEl.textContent='Your turn. Click the lamps — can you find a pair that survives?'};
+  skipB.onclick=()=>{endDemo();pulses=[];subEl.textContent='Click the buttons on the left to fire concepts yourself, and see if you can find a pair that reads back correctly.'};
   lamps.forEach(b=>b.onclick=()=>{
     if(demo){endDemo();subEl.textContent=''}
     const i=+b.dataset.i;manual.has(i)?manual.delete(i):manual.add(i);b.classList.toggle('on');pulses=[]});
@@ -567,26 +567,17 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
       ox.beginPath();ox.moveTo(tx2,y0-3);ox.lineTo(tx2,y0+15);ox.stroke();
       if(d>.28){ox.fillStyle='#ff6b4a';ox.beginPath();ox.arc(254,y0+6,3.5,0,7);ox.fill()}
     }
-    if(!BASE.done){errEl.textContent='assembling the model… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
-    else if(lost){errEl.textContent='✗ lost — the model never stored this concept';errEl.style.color='#ff8a63'}
-    else if(worst>.28){errEl.textContent='✗ crosstalk — concepts collided';errEl.style.color='#ff8a63'}
-    else{errEl.textContent='✓ clean readout';errEl.style.color='#f2f2f0'}
+    if(!BASE.done){errEl.textContent='training the model… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
+    else if(lost){errEl.textContent='✗ not stored: the model dropped this concept';errEl.style.color='#ff8a63'}
+    else if(worst>.28){errEl.textContent='✗ the concepts interfered';errEl.style.color='#ff8a63'}
+    else{errEl.textContent='✓ read back correctly';errEl.style.color='#f2f2f0'}
   }};
   window.__dbg.hero=()=>({t0ms,si,demo,pulses:pulses.length,words:words.length,skipShown:skipB.style.display!=='none'});
   register(root,w);
 })();
 
-// ---------- scroll reveal + progress nav ----------
+// ---------- primer toggle + progress nav ----------
 (function(){
-  const rd=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(!rd){
-    const els=[...document.querySelectorAll('figure.widget,.takeaway')];
-    els.forEach(e=>e.classList.add('reveal'));
-    const ro=new IntersectionObserver(es=>es.forEach(en=>{
-      if(en.isIntersecting){en.target.classList.add('in');ro.unobserve(en.target)}
-    }),{rootMargin:'0px 0px -6% 0px'});
-    els.forEach(e=>ro.observe(e));
-  }
   const pa=document.querySelector('#primer-all');
   if(pa)pa.onclick=()=>{
     const ds=[...document.querySelectorAll('details.primer')],open=ds.some(d=>!d.open);

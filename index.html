@@ -3,24 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>More Features Than Neurons — An Interactive Tour of Superposition</title>
-<meta name="description" content="An interactive explainer: how neural networks cram more concepts into fewer dimensions, why that makes them hard to read, and how sparse autoencoders unscramble the mess. Every experiment runs live in your browser.">
+<title>More Features Than Neurons: An Interactive Tour of Superposition</title>
+<meta name="description" content="An interactive explainer on superposition: how a neural network can store more concepts than it has neurons, why that makes single neurons hard to interpret, and how sparse autoencoders can recover the original features. Every experiment trains live in your browser.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d0d0c'/%3E%3Cg stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='16' y1='16' x2='16' y2='5' stroke='%23e0a300'/%3E%3Cline x1='16' y1='16' x2='26.5' y2='12.6' stroke='%232a7de1'/%3E%3Cline x1='16' y1='16' x2='22.5' y2='24.9' stroke='%23e0532f'/%3E%3Cline x1='16' y1='16' x2='9.5' y2='24.9' stroke='%2319a77f'/%3E%3Cline x1='16' y1='16' x2='5.5' y2='12.6' stroke='%238e5bd0'/%3E%3C/g%3E%3C/svg%3E">
 <meta property="og:type" content="article">
 <meta property="og:title" content="More Features Than Neurons">
-<meta property="og:description" content="Why single neurons mean several things at once, and how sparsity both causes the problem and cures it. Every experiment trains live in your browser.">
+<meta property="og:description" content="Why single neurons often respond to several unrelated things, and how sparsity explains both the problem and one way to undo it. Every experiment trains live in your browser.">
 <meta property="og:url" content="https://code259.github.io/more-features-than-neurons/">
 <meta property="og:image" content="https://code259.github.io/more-features-than-neurons/assets/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="More Features Than Neurons">
-<meta name="twitter:description" content="Why single neurons mean several things at once, and how sparsity both causes the problem and cures it. Every experiment trains live in your browser.">
+<meta name="twitter:description" content="Why single neurons often respond to several unrelated things, and how sparsity explains both the problem and one way to undo it. Every experiment trains live in your browser.">
 <meta name="twitter:image" content="https://code259.github.io/more-features-than-neurons/assets/og.png">
 <!--CSS--><style>
-/* ============ TWO WORLDS ============
-   Light paper = the human world: narration, captions, the hand-played game.
-   Dark panels = the machine world: anything a network computes.
-   Saturated color is reserved for feature identity — UI speaks in ink and structure.
-   Serif (Newsreader) = the narrator's voice. Mono (IBM Plex) = the instrument's voice. */
+/* Light panels hold text and the hand-played game; dark panels hold models that are computing.
+   Saturated color only identifies features. Newsreader sets all text, including labels and
+   controls; IBM Plex Mono is kept for numbers in readouts and for verbatim token records. */
 
 @font-face{font-family:'Newsreader';font-style:normal;font-weight:200 800;font-display:swap;src:url(fonts/newsreader.woff2) format('woff2')}
 @font-face{font-family:'Newsreader';font-style:italic;font-weight:200 800;font-display:swap;src:url(fonts/newsreader-italic.woff2) format('woff2')}
@@ -40,21 +38,21 @@
   --f0:#e0a300; --f1:#2a7de1; --f2:#e0532f; --f3:#19a77f; --f4:#8e5bd0; --f5:#d14a8e; --f6:#3bb8c9; --f7:#8a7a5c;
   --serif:'Newsreader',Georgia,'Times New Roman',serif;
   --mono:'IBM Plex Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
-  --sans:var(--mono);
+  --ui:var(--serif);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:20px;line-height:1.62;font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
 header.masthead{max-width:680px;margin:0 auto;padding:72px 20px 8px}
-.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+.kicker{font-size:16px;font-style:italic;color:var(--ink2)}
 h1{font-size:60px;line-height:1.02;margin:10px 0 18px;font-weight:500;letter-spacing:-.035em}
 .dek{font-size:22px;line-height:1.5;color:var(--ink2);margin:0 0 26px;font-style:italic}
-.byline{font-family:var(--mono);font-size:12.5px;color:var(--ink2);border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);padding:10px 0;display:flex;gap:18px;flex-wrap:wrap}
+.byline{font-size:15.5px;color:var(--ink2);border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);padding:10px 0;display:flex;gap:18px;flex-wrap:wrap}
 .byline b{color:var(--ink);font-weight:600}
 main{max-width:680px;margin:0 auto;padding:0 20px 80px}
 section{margin-top:76px;border-top:1px solid var(--ink);padding-top:22px}
 h2{font-size:42px;line-height:1.04;margin:0 0 10px;letter-spacing:-.035em;font-weight:500}
-h2 .secno{font-family:var(--mono);font-size:.28em;font-weight:600;letter-spacing:.16em;color:var(--ink2);vertical-align:.9em;margin-right:14px}
+h2 .secno{font-weight:400;color:var(--ink2);margin-right:12px}
 h3{font-size:21px;margin:30px 0 6px;font-weight:600}
 p{margin:14px 0}
 a{color:var(--ink);text-decoration-color:#9c9c98;text-underline-offset:2.5px}
@@ -63,45 +61,48 @@ em.term{font-style:normal;box-shadow:inset 0 -0.42em 0 #e2e2dd;padding:0 2px}
 .math{font-style:italic;white-space:nowrap}
 .math sup,.math sub{font-size:.72em}
 mark{background:#e4e4df;padding:0 2px;border-radius:0}
-.chip{display:inline-block;font-family:var(--mono);font-size:.66em;font-weight:600;color:#fff;padding:1px 8px 2px;border-radius:99px;vertical-align:1px;letter-spacing:.02em}
-.takeaway{background:transparent;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);padding:14px 0;margin:30px 0;font-size:18.5px}
-.takeaway b{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:4px;font-weight:600}
+.chip{display:inline-block;font-size:.8em;font-weight:600;color:#fff;padding:0 6px 1px;border-radius:0;vertical-align:1px}
+.takeaway{font-style:italic;color:var(--ink2);margin:22px 0}
 .aside{font-size:16.5px;color:var(--ink2);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:12px 2px;margin:24px 0}
 /* ---------- widgets: paper instruments ---------- */
-figure.widget{margin:34px -40px;background:var(--paper);border:1px solid var(--ink);border-radius:0;font-family:var(--mono);overflow:hidden}
+figure.widget{margin:34px -40px;font-family:var(--ui)}
+figure.widget .frame{background:var(--paper);border:1px solid var(--ink);border-radius:0;overflow:hidden}
 @media(max-width:800px){figure.widget{margin:30px -10px}}
 .w-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 18px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
-.w-title{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2)}
+.w-title{font-size:16px;font-weight:600;color:var(--ink)}
 .w-body{padding:16px 18px;display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
 .w-col{display:flex;flex-direction:column;gap:8px;align-items:center}
-.w-col .lbl{font-size:11px;color:var(--ink2);font-weight:400;letter-spacing:.01em}
-figcaption{font-family:var(--serif);font-size:16px;color:var(--ink2);padding:12px 18px 16px;border-top:1px dashed var(--rule);line-height:1.5;background:var(--paper)}
+.w-col .lbl{font-size:14px;font-style:italic;color:var(--ink2);font-weight:400;line-height:1.35;text-align:center;width:0;min-width:100%}  /* wraps to the canvas width instead of widening the column */
+figcaption{font-family:var(--serif);font-size:16px;color:var(--ink2);padding:12px 40px 0;line-height:1.55}
+@media(max-width:800px){figcaption{padding:10px 10px 0}}
 canvas{display:block;touch-action:none;border-radius:0}
 canvas.grabbable{cursor:grab}
-.btn{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;padding:7px 13px;border-radius:0;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
+.btn{font-family:var(--ui);font-size:15px;font-weight:500;padding:4px 12px;border-radius:0;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
 .btn:hover{background:var(--ink);color:var(--bg)}
 .btn.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .btn.primary:hover{background:#000}
 .btn:disabled{opacity:.45;cursor:default}
-.ctrl{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink2);font-weight:400}
+.ctrl{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink2);font-weight:400}
 input[type=range]{accent-color:var(--ink);width:170px}
 .scorebox{display:flex;gap:14px}
 .score{background:var(--card);border-radius:0;padding:8px 14px;min-width:108px;text-align:center}
-.score .v{font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
-.score .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:600}
+.score .v{font-family:var(--mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2}
+.score .k{font-size:14px;font-style:italic;color:var(--ink2)}
 .score.win .v{color:var(--good)}
 .toggle{display:flex;border:1px solid var(--ink);border-radius:0;overflow:hidden}
-.toggle button{font-family:var(--mono);font-size:12px;font-weight:600;border:0;background:transparent;color:var(--ink2);padding:7px 13px;cursor:pointer}
+.toggle button{font-family:var(--ui);font-size:15px;font-weight:500;border:0;background:transparent;color:var(--ink2);padding:4px 12px;cursor:pointer}
 .toggle button.on{background:var(--ink);color:var(--bg)}
-.readout{font-size:11.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
-.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--ink2);align-items:center}
+.readout{font-size:14.5px;color:var(--ink2)}
+.readout b{font-family:var(--mono);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;line-height:1.45;color:var(--ink2);align-items:center}
 .legend .sw{width:11px;height:11px;border-radius:0;display:inline-block;margin-right:4px;vertical-align:-1px}
 /* live / frozen indicator */
-.ind{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--ink2)}
+.ind{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-style:italic;color:var(--ink2)}
+.ind b{font-weight:400}
 .ind i{width:7px;height:7px;border-radius:50%;background:var(--live);display:inline-block}
 .ind.frozen i{background:#5c5c58}
 /* ---------- machine-world figures: dark instrument panels ---------- */
-figure.widget.machine{border-color:var(--ink);background:var(--m-bg)}
+figure.widget.machine .frame{border-color:var(--ink);background:var(--m-bg)}
 .machine .w-head{background:var(--m-bg);border-bottom:1px solid var(--m-rule)}
 .machine .w-title{color:var(--m-text)}
 .machine .readout{color:var(--m-text)}
@@ -121,30 +122,25 @@ figure.widget.machine{border-color:var(--ink);background:var(--m-bg)}
 .machine .score .k{color:var(--m-text)}
 .machine .score.win .v{color:var(--live)}
 .machine .ind{color:var(--m-text)}
-.machine .who{background:var(--m-card);border-color:var(--m-rule);color:var(--m-text)}
-.machine .who.m{color:var(--m-bright);border-color:#3a3a37}
-.machine figcaption{background:var(--paper)}
-/* widget provenance badge: the machine itself vs. a sibling experiment */
-.who{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:99px;padding:3px 10px;white-space:nowrap}
-.who.m{color:var(--ink);border-color:#9c9c98}
+.machine .who{color:var(--m-text)}
+.machine .who.m{color:var(--m-bright)}
+/* which model a figure shows */
+.who{font-size:14px;font-style:italic;color:var(--ink2);white-space:nowrap}
+.who.m{color:var(--ink)}
 /* record cards (real-model activation records) */
 .snips{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 18px}
 @media(max-width:620px){.snips{grid-template-columns:1fr}}
 *{}
 .snip{background:var(--card);border-radius:0;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.7;color:#3c3c39}
-.snip .tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:6px}
+.snip .tag{font-family:var(--serif);font-size:13.5px;font-style:italic;color:var(--ink2);display:block;margin-bottom:4px}
 .machine .snips{background:var(--m-bg)}
 .machine .snip{background:var(--m-card);color:var(--m-text)}
 .machine .snip .tag{color:#7a7a76}
 .snip .tk{border-radius:0;padding:0 1px;background:rgba(242,242,240,calc(var(--a)*.35));cursor:default}
 .snip .tk.hi{background:rgba(242,242,240,calc(.3 + var(--a)*.62));color:#14181a}
-/* try line: one concrete action per instrument */
-.try{display:flex;gap:10px;align-items:baseline;padding:10px 18px;border-top:1px dashed var(--rule);font-family:var(--serif);font-size:15.5px;color:var(--ink2);background:var(--paper)}
-.try b{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--ink);border:1px solid var(--ink);border-radius:99px;padding:2px 8px;flex-shrink:0}
 /* reproduction checklist */
-.repro{background:var(--card);border:1px solid var(--rule);border-radius:0;padding:12px 18px;font-family:var(--mono);font-size:13px;line-height:2;color:var(--ink2);margin:16px 0}
-.repro b{color:var(--ink);font-weight:600}
-.repro .ok{color:var(--good);font-weight:600}
+.repro{font-size:15.5px;line-height:1.55;padding-left:20px;margin:8px 0 16px}
+.repro li{margin-bottom:4px}
 /* model diagram */
 .diagram{display:flex;justify-content:center;padding:18px;background:var(--paper)}
 .diagram svg{max-width:100%;height:auto}
@@ -153,29 +149,25 @@ footer{border-top:1px solid var(--rule);margin-top:70px;padding:26px 0;font-size
 footer h3{font-size:16px}
 ol.refs{padding-left:20px;font-size:15px;line-height:1.55}
 ol.refs li{margin-bottom:6px}
-.fin{text-align:center;color:#c2c8bd;font-size:24px;letter-spacing:.4em;margin:50px 0 0}
-@media(max-width:640px){h1{font-size:38px}h2{font-size:29px}h2 .secno{font-size:.32em;margin-right:9px}.dek{font-size:19px}body{font-size:18px}figure.widget{margin:26px -10px}}
+@media(max-width:640px){h1{font-size:38px}h2{font-size:29px}.dek{font-size:19px}body{font-size:18px}figure.widget{margin:26px -10px}}
 /* hero machine */
 .lamps{display:flex;flex-direction:column;gap:7px;min-width:130px}
-.lamps button{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:0;padding:7px 12px;cursor:pointer;transition:all .12s}
+.lamps button{display:flex;align-items:center;gap:9px;font-family:var(--ui);font-size:15px;font-weight:500;color:var(--ink2);background:var(--card);border:1px solid var(--rule);border-radius:0;padding:7px 12px;cursor:pointer;transition:all .12s}
 .lamps button i{width:12px;height:12px;border-radius:50%;display:inline-block;opacity:.45;transition:all .12s}
 .lamps button:hover{border-color:var(--ink)}
 .lamps button.on{color:var(--ink);border-color:var(--ink);background:#fff}
 .lamps button.on i{opacity:1;box-shadow:0 0 7px 1px currentColor}
-/* scroll reveal */
-.reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease}
-.reveal.in{opacity:1;transform:none}
 /* story map: the specimen + the argument, always in view (wide screens) */
-#map{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:9;width:170px;font-family:var(--mono);transition:opacity .45s}
+#map{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:9;width:170px;font-family:var(--ui);transition:opacity .45s}
 #map.off{opacity:0;pointer-events:none}
 #map .spec-card{display:block;background:var(--m-bg);border:1px solid #2c3730;border-radius:0;padding:9px 8px 7px;text-align:center;text-decoration:none;margin-bottom:10px}
 #map .spec-card:hover{border-color:var(--m-text)}
 #map .spec-card canvas{margin:0 auto}
-#map .spec-card .k{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--m-bright);display:block;margin-top:5px}
-#map .spec-card .st{font-size:10px;font-weight:600;color:var(--live);display:block;font-variant-numeric:tabular-nums}
+#map .spec-card .k{font-size:13.5px;font-weight:600;color:var(--m-bright);display:block;margin-top:5px}
+#map .spec-card .st{font-size:12.5px;font-style:italic;color:var(--live);display:block}
 #map .spec-card .cap{font-size:10px;color:var(--m-text);display:block;line-height:1.35;margin-top:3px;font-family:var(--serif);font-style:italic;font-size:11.5px}
 #map nav{display:flex;flex-direction:column;gap:3px}
-#map nav a{font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--ink2);text-decoration:none;padding:3px 8px 3px 14px;border-left:2px solid var(--rule);opacity:.7;transition:color .15s,opacity .15s}
+#map nav a{font-size:14px;font-weight:500;color:var(--ink2);text-decoration:none;padding:3px 8px 3px 14px;border-left:2px solid var(--rule);opacity:.7;transition:color .15s,opacity .15s}
 #map nav a:hover{color:var(--ink);opacity:1}
 #map nav a.cur{color:var(--ink);border-left-color:var(--ink);opacity:1}
 #map nav a .q{display:none;font-weight:400;font-size:12px;color:var(--ink2);line-height:1.35;margin-top:2px;font-family:var(--serif);font-style:italic}
@@ -191,7 +183,7 @@ ol.refs li{margin-bottom:6px}
 .scene-dek{font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.55;color:var(--m-text);max-width:470px;margin:0}
 .scene-dek b{color:var(--m-bright)}
 .scene-hud{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.scene-hud .readout{color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:99px;padding:6px 14px;font-weight:600;font-family:var(--mono);font-size:11.5px}
+.scene-hud .readout{color:var(--m-text);font-style:italic;font-size:15px;padding:4px 6px}
 .btn.dark{background:var(--m-card);border-color:var(--m-rule);color:var(--m-text)}
 .btn.dark:hover{border-color:var(--m-bright);color:var(--m-bright)}
 .scene-stage{display:flex;gap:26px;align-items:center;justify-content:center;flex-wrap:wrap;will-change:transform;transform-style:preserve-3d}
@@ -199,13 +191,13 @@ ol.refs li{margin-bottom:6px}
 .scene-stage .lbl{color:var(--m-text)}
 .scene-stage canvas{border:1px solid var(--m-rule);border-radius:0}
 .scene-stage .lamps{display:flex;flex-direction:column;gap:8px;min-width:140px}
-.scene-stage .lamps button{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:600;color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:0;padding:9px 14px;cursor:pointer;transition:all .12s}
+.scene-stage .lamps button{display:flex;align-items:center;gap:10px;font-family:var(--ui);font-size:16px;font-weight:500;color:var(--m-text);background:var(--m-card);border:1px solid var(--m-rule);border-radius:0;padding:9px 14px;cursor:pointer;transition:all .12s}
 .scene-stage .lamps button i{width:12px;height:12px;border-radius:50%;display:inline-block;opacity:.45;transition:all .12s}
 .scene-stage .lamps button:hover{border-color:var(--m-bright);color:var(--m-bright)}
 .scene-stage .lamps button.on{background:#1d1d1c;border-color:var(--m-bright);color:var(--m-bright)}
 .scene-stage .lamps button.lit i{opacity:1;box-shadow:0 0 12px 2px currentColor}
 .scene-stage .subtitle{flex-basis:100%;text-align:center;font-family:var(--serif);font-size:17px;font-weight:400;font-style:italic;color:var(--m-bright);min-height:26px;padding:4px 10px;text-shadow:0 1px 12px rgba(0,0,0,.7)}
-.scroll-cue{align-self:center;text-align:center;font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--m-text);padding-bottom:6px;transition:opacity .5s}
+.scroll-cue{align-self:center;text-align:center;font-size:15px;font-style:italic;color:var(--m-text);padding-bottom:6px;transition:opacity .5s}
 .scroll-cue .chev{display:block;font-size:20px;animation:bob 1.6s ease-in-out infinite;color:var(--m-bright)}
 .scroll-cue.hide{opacity:0}
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
@@ -216,15 +208,15 @@ ol.refs li{margin-bottom:6px}
 .bridge{font-size:20px;line-height:1.6;font-style:italic;color:var(--ink2);margin:22px 0 0}
 .bridge b{color:var(--ink)}
 /* primer cards */
-details.primer{background:var(--card);border:1px solid var(--rule);border-radius:0;margin:22px 0;font-size:17px;line-height:1.55}
-details.primer summary{cursor:pointer;font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:.04em;color:var(--ink);padding:11px 16px;list-style:none;display:flex;gap:9px;align-items:baseline}
+details.primer{border-left:2px solid var(--ink);padding-left:16px;margin:22px 0;font-size:17.5px;line-height:1.55}
+details.primer summary{cursor:pointer;font-style:italic;color:var(--ink2);list-style:none}
 details.primer summary::-webkit-details-marker{display:none}
-details.primer summary::before{content:'⊕';font-size:15px;flex-shrink:0;transition:transform .2s}
-details.primer[open] summary::before{content:'⊖'}
-details.primer summary .gist{font-weight:400;color:var(--ink2);font-family:var(--serif);font-style:italic;font-size:15px;letter-spacing:0}
-details.primer .p-body{padding:2px 18px 14px;color:#39433c;border-top:1px dashed var(--rule)}
+details.primer summary::before{content:'▸';display:inline-block;width:1em;font-style:normal;font-size:.8em;transition:transform .15s}
+details.primer[open] summary::before{transform:rotate(90deg)}
+details.primer summary:hover{color:var(--ink)}
+details.primer .p-body{color:#2c2c2a;padding-bottom:2px}
 details.primer .p-body p{margin:10px 0}
-details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
+details.primer .p-ref{font-size:15.5px;color:var(--ink2)}
 .linklike{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;text-decoration-color:#b3bcb2;cursor:pointer}
 </style><!--/CSS-->
 </head>
@@ -235,20 +227,20 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 <aside id="map" class="off" aria-label="story map">
   <a class="spec-card" href="#machine" title="back to the model">
     <canvas width="118" height="118"></canvas>
-    <span class="k">⬡ the model</span>
+    <span class="k">the model</span>
     <span class="st">—</span>
-    <span class="cap">every section below studies this network</span>
+    <span class="cap">the network from the top of the page, used again in the polysemanticity and autoencoder sections</span>
   </a>
   <nav>
-    <a href="#machine">the model<span class="q">Six concepts stored in two neurons.</span></a>
-    <a href="#hook">neurons<span class="q">Real neurons fire on unrelated things.</span></a>
-    <a href="#game">packing<span class="q">More features than room to put them.</span></a>
-    <a href="#model">toy model<span class="q">A ReLU deletes crosstalk below threshold.</span></a>
-    <a href="#sparsity">sparsity<span class="q">Rare features share space almost for free.</span></a>
-    <a href="#geometry">geometry<span class="q">Sphere packing. Neurons are bystanders.</span></a>
-    <a href="#poly">polysemanticity<span class="q">Every axis cuts across many features.</span></a>
-    <a href="#sae">autoencoders<span class="q">Sparsity, run backwards, recovers them.</span></a>
-    <a href="#epilogue">decompression<span class="q">Interpretability is the decompression problem.</span></a>
+    <a href="#machine">the model<span class="q">Six concepts stored in two neurons. How does that work?</span></a>
+    <a href="#hook">neurons<span class="q">Why do real neurons respond to unrelated things?</span></a>
+    <a href="#game">packing<span class="q">Six arrows, two dimensions, and you choose the layout.</span></a>
+    <a href="#model">toy model<span class="q">A ReLU and a bias let the model remove small interference.</span></a>
+    <a href="#sparsity">sparsity<span class="q">Rare features can share dimensions with little error.</span></a>
+    <a href="#geometry">geometry<span class="q">The learned arrows form regular shapes.</span></a>
+    <a href="#poly">polysemanticity<span class="q">Each neuron axis crosses several features.</span></a>
+    <a href="#sae">autoencoders<span class="q">A sparsity penalty recovers the original features.</span></a>
+    <a href="#epilogue">real models<span class="q">What carries over from the toy, and what doesn't.</span></a>
   </nav>
 </aside>
 
@@ -260,7 +252,7 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
       <div class="scene-title">
         <div class="kicker">An interactive explainer</div>
         <h1>More Features Than Neurons</h1>
-        <p class="scene-dek">A neural network with six concepts to store and <b>two neurons</b> to store them in. Click a concept to fire it and watch what comes back out.</p>
+        <p class="scene-dek">This is a neural network that has six concepts to store and only two neurons to store them in. Click a concept to fire it and watch what comes back out on the right.</p>
       </div>
       <div class="scene-hud">
         <span class="readout r-err">—</span>
@@ -278,10 +270,10 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
           <button data-i="4"><i style="background:var(--f4)"></i>code</button>
           <button data-i="5"><i style="background:var(--f5)"></i>weather</button>
         </div>
-        <span class="lbl" style="max-width:150px;text-align:center">six concepts — <b>click to fire</b> (try two at once)</span>
+        <span class="lbl" style="max-width:150px;text-align:center">six concepts: click one to fire it, or two at once</span>
       </div>
-      <div class="w-col"><canvas class="c-ch"></canvas><span class="lbl">…crammed into 2 neurons…</span></div>
-      <div class="w-col"><canvas class="c-out"></canvas><span class="lbl" style="max-width:280px;text-align:center">…and read back out (tick = truth, bar = readout)</span></div>
+      <div class="w-col"><canvas class="c-ch"></canvas><span class="lbl">stored in 2 neurons</span></div>
+      <div class="w-col"><canvas class="c-out"></canvas><span class="lbl" style="max-width:280px;text-align:center">read back out (tick = true value, bar = model output)</span></div>
       <div class="subtitle">—</div>
     </div>
     <div class="scroll-cue">scroll<span class="chev">⌄</span></div>
@@ -295,61 +287,58 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
 <div class="masthead slim">
   <div class="byline">
     <span><b>Nikhil Maturi</b></span>
-    <span>July 2026</span>
-    <span>VISxAI 2026 submission</span>
-    <span>≈ 15 min + play time</span>
-    <span>no ML background needed — ⊕ primer cards fill in prerequisites as they come up (<button id="primer-all" class="linklike">expand all</button>)</span>
+    <span>October 2026</span>
+    <span>VISxAI 2026</span>
+    <span>about 15 minutes, plus time with the figures</span>
+    <span>No ML background needed. Expandable notes explain prerequisites where they come up <span style="white-space:nowrap">(<button id="primer-all" class="linklike">expand all</button>)</span></span>
   </div>
-  <p class="bridge">That was a complete neural network: 18 numbers, six concepts, two neurons, trained in your browser in the second it took you to scroll past. The rest of this page takes it apart — how the cramming works, when it breaks, and how to run it backwards. If you noticed it refusing to store <b>weather</b>, that's the sparsity section below.</p>
+  <p class="bridge">The dark panel above is a complete neural network with 18 numbers in it, and it trained in your browser when the page opened, storing six concepts using only two neurons. The rest of this page takes it apart, starting with how two neurons can hold six concepts, then when that stops working, and finally how to get the concepts back out of the neurons. If you noticed that it never reads back weather correctly, the sparsity section explains why.</p>
 </div>
 
 <!-- ============ 0. HOOK ============ -->
 <section id="hook">
   <h2><span class="secno">0.</span>One neuron, many meanings</h2>
-  <p>Open up a trained language model, pick a neuron — one number, in one layer, which takes some value on every input you feed the thing and sits at zero for most of them — and ask what it's for. If networks were built the way we'd build them the answer would be a short phrase: one neuron for quotation marks, one for wetness, one for the Golden Gate Bridge, and so on down the list until you had catalogued the model and could go home.</p>
-  <p>They aren't built that way, and it isn't close. Below are four neurons from GPT-2, each with the text that excites it most, taken verbatim from OpenAI's public dump of all 307,200 of them.<a href="#ref9"><sup>[9]</sup></a> Brightness is the measured activation. Try finishing <em>“this neuron detects&nbsp;___”</em> for any of the four.</p>
+  <p>If you open up a trained language model and pick a single neuron, what you have is one number in one layer, which takes some value on every input you feed the model and sits at zero for most of them. If networks were built the way people would build them, you could describe what each of those numbers is for in a short phrase, so one neuron would track quotation marks, another wetness, another the Golden Gate Bridge, and you could work your way down the list until the whole model was catalogued.</p>
+  <p>Trained networks mostly don't work that way, and you can see it in the four GPT-2 XL neurons below, each shown with the text that activates it most strongly, copied exactly from OpenAI's public dataset of all 307,200 of them.<a href="#ref9"><sup>[9]</sup></a> The brighter a token is, the more strongly the neuron fired on it. Try finishing the sentence <em>“this neuron detects&nbsp;___”</em> for any of the four.</p>
 
-  <figure class="widget machine" id="w-hook">
+  <figure class="widget machine" id="w-hook"><div class="frame">
     <div class="w-head">
       <span class="w-title">Raw neurons of GPT-2</span>
-      <span class="who m">real model — verbatim records</span>
+      <span class="who m">real model, verbatim records</span>
       <div class="ctrl"><button class="btn n-prev">←</button><span class="readout n-name">—</span><button class="btn n-next">→</button></div>
     </div>
     <div class="snips"></div>
     <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
       <span class="readout n-val">hover a lit token</span>
       <span class="readout">GPT-2 XL · OpenAI neuron dataset · top records</span>
-    </div>
-    <div class="try"><b>TRY</b><span>Hover the lit tokens, then flip to the next neuron and try the sentence again. It doesn't get easier.</span></div>
-    <figcaption>Neuron 45 of layer 10 fires on surveillance news, a lobster recipe, a platform game, and sawfly larvae. The most famous example of the species, from Bricken et&nbsp;al., fired on academic citations, English dialogue, HTTP requests, and Korean text <a href="#ref2">[2]</a>. Neurons that mean one thing are the exception.</figcaption>
+    </div></div>
+    <figcaption>Hover over the lit tokens to see their activation values, then flip to the next neuron and try the sentence again. Neuron 45 of layer 10 fires on a news story about surveillance footage, a lobster recipe, a platform game, and sawfly larvae. The best-known example of this kind of neuron, described by Bricken et&nbsp;al. in a small one-layer transformer, fired on academic citations, English dialogue, HTTP requests, and Korean text <a href="#ref2">[2]</a>.</figcaption>
   </figure>
 
-  <p>Surveillance footage and lobster Newburg; court citations and graduation parties; and neuron 3013 up in layer 12, which spends its time on Kalamazoo, a sumo wrestler's name, and the back half of the word “warhead” — three things, or one thing, depending on how charitable you're feeling about tokenization. Dig around and most neurons look like this, which is not a sign that anything has gone wrong; the network is simply short on space, and this is what being short on space looks like from the inside.
-  <p>It is worth doing the arithmetic on how much room there actually is. GPT-2 small gets 768 numbers per layer to think with, against a vocabulary of 50,257 tokens, so even if the only thing it ever had to write down were which token it had just read — no syntax, no topic, no speaker, nothing — that is already 65 tokens for every dimension. And tokens are the cheap part of the job, since it also has to keep track of who's talking, what language this is, whether the tone is sarcastic, whether we're inside a quotation or a URL or a legal citation, plus however many thousands of things nobody has bothered to name; when Anthropic ran dictionary learning over a production model and counted, the number came back at 34 million<a href="#ref3"><sup>[3]</sup></a> (which is where they stopped looking, not a ceiling). Give each of those a private dimension and you need a model thousands of times wider than anything anyone has built.</p>
-  <p>So they don't try, and instead they <em class="term">cram</em> — more concepts than dimensions, stored on top of one another, and the interference that follows is the bill. The practice has a name, <em class="term">superposition</em>, and a theory precise enough to make predictions<a href="#ref1"><sup>[1]</sup></a>; the model at the center of that theory has 18 parameters and trains in about a second, which makes meeting it as a PDF of finished figures a bit of a waste.</p>
-  <p>It runs here instead, and you get the first experiment before any network does. Knowing what a vector is will carry you the whole way; the ⊕ primers cover the rest as it comes up.</p>
+  <p>Neuron 3013 in layer 12 is another one. It responds to Kalamazoo, a sumo wrestler's name, and the second half of the word “warhead”, which you could count as three things or one depending on how you feel about tokenization. Neurons like these turn up all over language models. When OpenAI had GPT-4 write an explanation for every neuron in GPT-2 XL and then scored each explanation by how well it predicted the neuron's activity, only a bit over a thousand of the 307,200 scored 0.8 or higher.<a href="#ref9"><sup>[9]</sup></a> A low score doesn't prove that a neuron has no single meaning, because the explanations can miss things, but it does suggest that neurons with one clean meaning are uncommon. There is more than one proposed reason for this.<a href="#ref13"><sup>[13]</sup></a> The best-studied one, and the one this page is about, is that the network has more things to represent than it has neurons.</p>  <p>GPT-2 small, for example, has 768 numbers per layer and a vocabulary of 50,257 tokens, so even if all it had to record was which token it just read, with no syntax, topic, or speaker, it would need about 65 tokens per dimension. The vocabulary is the easy part, since the model also has to track who is talking, what language the text is in, whether the tone is sarcastic, and whether the current token is inside a quotation, a URL, or a legal citation, along with many things nobody has named. When Anthropic trained a sparse dictionary on one of its production models, they gave it room for 34 million features<a href="#ref3"><sup>[3]</sup></a>, and while not every entry ended up being used, that is still far more than the number of dimensions in any layer of the model.</p>
+  <p>So models store more concepts than they have dimensions, layered on top of one another, and accept the interference that comes with it. This is called <em class="term">superposition</em>, and there is a theory of it detailed enough to make testable predictions.<a href="#ref1"><sup>[1]</sup></a> The model at the center of that theory has only 18 parameters and trains in about a second, which is small enough that its main experiments can run right here on the page instead of being shown as static figures.</p>
+  <p>You get to try the first experiment yourself before any network does. Knowing what a vector is will be enough to follow along, and the expandable notes cover the rest as it comes up.</p>
 </section>
 
 <!-- ============ 1. GAME ============ -->
 <section id="game">
   <h2><span class="secno">1.</span>The packing problem</h2>
-  <p>The problem with everything inessential taken out: <b>six features</b> to store, six concepts the model cares about, and <b>two dimensions</b> to put them in. A feature gets kept as a <em>direction</em>, an arrow in the flat space below, and the arrow wants length 1 to count as properly stored. Arrows interfere, though, which is the whole difficulty — any two that aren't perpendicular leak into each other, so reading one picks up some of the other, and the score charges you for all of it.
-  <p>Two dimensions hold exactly two perpendicular arrows and you have been given six features, so somebody is going to have to overlap with somebody.</p>
+  <p>If you take away everything except the storage problem, what is left is a puzzle you can solve with a mouse. You have six features to store, meaning six concepts the model cares about, and two dimensions to store them in. Each feature is stored as a <em>direction</em>, which is an arrow in the flat space below, and an arrow needs a length of 1 to count as fully stored. The difficulty is that any two arrows that aren't perpendicular <em>interfere</em>, which means reading one of them also picks up part of the other, and the score adds a penalty for all of that overlap.</p>  <p>Two dimensions only have room for two perpendicular arrows, so with six features, at least some of them will have to overlap.</p>
 
   <details class="primer">
-    <summary>Primer: vectors, directions, and “interference” <span class="gist">— the only math the game needs</span></summary>
+    <summary>If vectors are new to you, this is the only math the game needs</summary>
     <div class="p-body">
-      <p>A <b>vector</b> here is just an arrow from the center: a direction plus a length. Storing a feature “as a vector” means: when this feature is active, push the hidden state in this direction; to read it back, measure how far the state extends along that direction.</p>
-      <p>That measuring is the <b>dot product</b>: for arrows <span class="math">a</span> and <span class="math">b</span> it returns (length of a) × (length of b) × cos(angle between). Perpendicular arrows give 0 — reading one picks up none of the other. The smaller the angle between two arrows, the more reading one accidentally reads the other. That spillover is all “interference” means.</p>
-      <p class="p-ref">Deeper: any linear algebra intro; 3Blue1Brown's <em>Essence of Linear Algebra</em>, episodes 1 &amp; 9.</p>
+      <p>In this article a vector is an arrow that starts at the center of the plot and has a direction and a length. Storing a feature as a vector means that whenever the feature is active, the model moves its hidden state in that arrow's direction, and to read the feature back it measures how far the hidden state reaches along the same direction.</p>
+      <p>That measurement is called the dot product, and for two arrows <span class="math">a</span> and <span class="math">b</span> it is the length of a times the length of b times the cosine of the angle between them. Perpendicular arrows give 0, so reading one picks up none of the other, and the smaller the angle between two arrows, the more of the other one gets picked up by accident. That accidental overlap is all “interference” means here.</p>
+      <p class="p-ref">Any introduction to linear algebra covers this, and episodes 1 and 9 of 3Blue1Brown's <em>Essence of Linear Algebra</em> are a good place to start.</p>
     </div>
   </details>
-  <p>One more rule: the six are not equally valuable. <span class="chip" style="background:var(--f0)">F1</span> matters most, <span class="chip" style="background:var(--f5)">F6</span> least, and thicker arrows are worth more. <b>Drag the arrow tips</b> and push the score as low as you can. Then hand the layout to gradient descent, which starts from your arrangement rather than from scratch — whatever it finds, it found by improving on your idea.</p>
+  <p>There is one more rule, which is that the six features aren't equally valuable. <span class="chip" style="background:var(--f0)">F1</span> matters most and <span class="chip" style="background:var(--f5)">F6</span> least, and the thicker an arrow is drawn, the more it is worth. Drag the arrow tips to get the score as low as you can, and then hand your layout to gradient descent. It starts from your arrangement rather than from scratch, so whatever it ends up with is an improvement on your layout.</p>
 
-  <figure class="widget" id="w-game">
+  <figure class="widget" id="w-game"><div class="frame">
     <div class="w-head">
-      <span class="w-title">The packing game — you vs. gradient descent</span>
-      <span class="who">no network yet — just you</span>
+      <span class="w-title">The packing game: you vs. gradient descent</span>
+      <span class="who">no network yet, just you</span>
       <div class="ctrl"><button class="btn primary b-sgd">Let gradient descent take over</button><button class="btn b-reset">Reset</button></div>
     </div>
     <div class="w-body">
@@ -359,27 +348,26 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
           <div class="score"><div class="v s-you">—</div><div class="k">your loss</div></div>
           <div class="score"><div class="v s-sgd">—</div><div class="k">gradient descent</div></div>
         </div>
-        <div class="legend" style="max-width:170px">Loss = (under-representation) + (interference between overlapping arrows). Lower is better. Gradient descent starts from <em>your</em> layout.</div>
+        <div class="legend" style="max-width:170px">Loss is how far each arrow falls short of length 1, plus the interference between overlapping arrows. Lower is better. Gradient descent starts from your layout.</div>
       </div>
-    </div>
-    <div class="try"><b>TRY</b><span>Drag the tips. Get below 3.0 if you can. Then press the button and watch what gradient descent does with your best idea.</span></div>
-    <figcaption>The score is the toy model's loss in its analytic form <a href="#ref1">[1]</a>: each feature pays for falling short of length 1, weighted by importance, plus a penalty for every pair of non-perpendicular arrows. Most people sacrifice the unimportant features first, then discover that spreading the overlap around beats clean sacrifice.</figcaption>
+    </div></div>
+    <figcaption>Drag the tips and try to get the score below 3.0. Then press the button and see what gradient descent does starting from your layout. The score is the toy model's loss written out directly <a href="#ref1">[1]</a>. Each feature adds a penalty for falling short of length 1, weighted by its importance, and every pair of arrows that aren't perpendicular adds a penalty for their overlap. Keeping two perpendicular arrows and dropping the other four scores 2.60, spreading all six evenly around the circle scores 2.25, and gradient descent gets to about 1.47 in our runs, with all six features kept at a bit less than full length.</figcaption>
   </figure>
 
-  <p>A minute of dragging turns up both strategies the problem allows. The first is clean sacrifice: give the two most valuable features perfect perpendicular arrows and throw the other four away. Nothing interferes, and four concepts stop existing. The second is the squeeze: wedge the extra arrows into the gaps so that everyone overlaps slightly, everyone pays a little crosstalk, and nobody is dropped.</p>
-  <p>Which one wins isn't a matter of taste. It depends on how often the features actually show up, which is the next two sections.</p>
-  <div class="takeaway"><b>Takeaway</b>Representing more features than you have dimensions forces interference. The network's only real choice is <em>who pays it</em>: drop features cleanly, or overlap them and absorb the crosstalk.</div>
+  <p>After a minute of dragging you have probably found both of the strategies this problem allows. One is to give the two most valuable features perpendicular arrows and drop the other four, so that nothing interferes but four concepts aren't stored at all. The other is to fit the extra arrows into the gaps, so that every feature overlaps a little with its neighbors, each one gets a small amount of interference, and none are dropped.</p>
+  <p>In this game the overlapping layout scores better, but which strategy works better in general depends on how often the features actually show up, and that is what the next two sections are about.</p>
+  <div class="takeaway">With more features than dimensions, some interference can't be avoided. The network has to choose between dropping features so the rest don't interfere, and overlapping them so that every feature gets a little interference.</div>
 </section>
 
 <!-- ============ 2. TOY MODEL ============ -->
 <section id="model">
   <h2><span class="secno">2.</span>The toy model</h2>
-  <p>Now hand the same problem to an actual network. This is the toy model of Elhage et&nbsp;al., exactly as published<a href="#ref1"><sup>[1]</sup></a>: an autoencoder with a bottleneck, 18 parameters in total.</p>
+  <p>Next we give the same problem to an actual network. This is the toy model from Elhage et&nbsp;al., set up the way they published it<a href="#ref1"><sup>[1]</sup></a>. It's an autoencoder with two hidden neurons between a six-number input and a six-number output, and it has 18 parameters in total.</p>
 
-  <figure class="widget">
+  <figure class="widget"><div class="frame">
     <div class="diagram">
-      <svg viewBox="0 0 640 150" font-family="'IBM Plex Mono',ui-monospace,monospace" font-size="11.5">
-        <g fill="#6e6e6a"><text x="60" y="20" text-anchor="middle">input x — 6 features</text><text x="320" y="20" text-anchor="middle">hidden h = Wx — 2 neurons</text><text x="580" y="20" text-anchor="middle">output x′ = ReLU(Wᵀh + b)</text></g>
+      <svg viewBox="0 0 640 150" font-family="Newsreader,Georgia,serif" font-size="14.5">
+        <g fill="#6e6e6a"><text x="4" y="20" text-anchor="start" font-style="italic">input x (6 features)</text><text x="320" y="20" text-anchor="middle" font-style="italic">hidden h = Wx (2 neurons)</text><text x="636" y="20" text-anchor="end" font-style="italic">output x′ = ReLU(Wᵀh + b)</text></g>
         <g>
           <circle cx="60" cy="40" r="9" fill="var(--f0)"/><circle cx="60" cy="58" r="9" fill="var(--f1)"/><circle cx="60" cy="76" r="9" fill="var(--f2)"/><circle cx="60" cy="94" r="9" fill="var(--f3)"/><circle cx="60" cy="112" r="9" fill="var(--f4)"/><circle cx="60" cy="130" r="9" fill="var(--f5)"/>
           <circle cx="320" cy="68" r="11" fill="#0d0d0c"/><circle cx="320" cy="100" r="11" fill="#0d0d0c"/>
@@ -391,27 +379,26 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
         </g>
         <g fill="#0d0d0c" font-weight="600"><text x="190" y="120">W (compress)</text><text x="420" y="120">Wᵀ (reconstruct)</text></g>
       </svg>
-    </div>
-    <figcaption>Six sparse features get squeezed through two hidden neurons, then reconstructed. The i-th column of W is exactly the arrow you were dragging in the game — the direction in hidden space where feature i lives. Training minimizes importance-weighted reconstruction error.</figcaption>
+    </div></div>
+    <figcaption>Six sparse features go in on the left, get compressed into two hidden neurons in the middle, and are rebuilt on the right. Column i of W is the same arrow you were dragging for feature i in the game, meaning it's the direction in the hidden space where that feature is stored, and training lowers the reconstruction error after weighting each feature by its importance.</figcaption>
   </figure>
 
-  <p>The input <span class="math">x</span> holds six features, each off most of the time and on with random strength the rest, which here means active 5% of the time. Importance decays from <span class="chip" style="background:var(--f0)">F1</span> to <span class="chip" style="background:var(--f5)">F6</span>, so mistakes on F1 cost roughly six times what mistakes on F6 cost. The model squeezes all six through two hidden neurons and tries to rebuild what went in.</p>
+  <p>Each of the six features in the input <span class="math">x</span> is off most of the time, and when one does turn on (5% of the time here) it takes a random strength. Importance falls from <span class="chip" style="background:var(--f0)">F1</span> to <span class="chip" style="background:var(--f5)">F6</span>, so an error on F1 counts about six times as much in the loss as the same error on F6. The model has to pass all six features through the two hidden neurons and then reconstruct them at the output.</p>
 
   <details class="primer">
-    <summary>Primer: how to read x′ = ReLU(WᵀWx + b), and what “training” does <span class="gist">— 60 seconds of notation</span></summary>
+    <summary>How to read x′ = ReLU(WᵀWx + b), and what training does</summary>
     <div class="p-body">
-      <p><span class="math">x</span> is the list of six feature values going in; <span class="math">x′</span> is the model's attempt to reproduce them. <span class="math">W</span> is a grid of 12 numbers (2 rows × 6 columns); multiplying by <span class="math">W</span> squeezes six numbers down to two, and multiplying by its transpose <span class="math">Wᵀ</span> stretches two back up to six. Column i of <span class="math">W</span> is exactly the arrow you dragged for feature i in the game. <span class="math">b</span> is six learned offsets added at the end.</p>
-      <p><b>ReLU</b> is the simplest nonlinearity there is: if a number is negative, replace it with zero; otherwise leave it alone. Remember that — the entire plot of this article turns on it.</p>
-      <p><b>Training</b> means: score the model by its reconstruction error (weighted by feature importance), then nudge every number in <span class="math">W</span> and <span class="math">b</span> slightly downhill on that score, thousands of times. You watched this exact process when gradient descent took over your layout in the game — same idea, just applied to more numbers.</p>
-      <p class="p-ref">Deeper: the model definition in Elhage et&nbsp;al., <em>Toy Models of Superposition</em>, section 2 <a href="#ref1">[1]</a>.</p>
+      <p><span class="math">x</span> is the list of six feature values going in, and <span class="math">x′</span> is the model's attempt to reproduce them. <span class="math">W</span> is a grid of 12 numbers with 2 rows and 6 columns, so multiplying by <span class="math">W</span> takes six numbers down to two, and multiplying by its transpose <span class="math">Wᵀ</span> takes those two back up to six. Column i of <span class="math">W</span> is the arrow you dragged for feature i in the game, and <span class="math">b</span> is a list of six learned offsets that get added at the end.</p>
+      <p>ReLU is about the simplest nonlinearity there is, since all it does is replace a negative number with zero and leave everything else alone. Most of the results in the rest of this article depend on it.</p>
+      <p>Training means scoring the model by its reconstruction error, weighted by how important each feature is, and then nudging every number in <span class="math">W</span> and <span class="math">b</span> a little in whichever direction lowers that score, thousands of times over. It's the same process you watched in the game when gradient descent took over your layout, only now it's adjusting more numbers.</p>
+      <p class="p-ref">The model is defined in section 2 of Elhage et&nbsp;al., <em>Toy Models of Superposition</em> <a href="#ref1">[1]</a>.</p>
     </div>
   </details>
-  <p>Watch it run with the nonlinearity and without. What follows is <b>training right now, in your browser</b> — the arrows are the columns of W, moving under gradient descent as you read this.
-
-  <figure class="widget machine" id="w-toymodel">
+  <p>Since so much depends on the nonlinearity, the figure below lets you run the model both with it and without it. The model is training in your browser while you read this, and the arrows on the left are the columns of W moving under gradient descent.</p>
+  <figure class="widget machine" id="w-toymodel"><div class="frame">
     <div class="w-head">
       <span class="w-title">The toy model, training live</span>
-      <span class="who">fresh model — same recipe as the model</span>
+      <span class="who">a separate model, trained from scratch</span>
       <span class="ind"><i></i><b>—</b></span>
       <div class="ctrl">
         <div class="toggle"><button class="b-lin">Linear</button><button class="b-relu on">+ ReLU</button></div>
@@ -425,133 +412,130 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
     <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
       <span class="readout">loss <b class="r-loss">—</b></span><span class="readout">steps <b class="r-step">—</b></span>
       <span class="readout">features active 5% of the time · importance decays F1 → F6</span>
-    </div>
-    <div class="try"><b>TRY</b><span>Toggle Linear and watch four features die. Toggle back and watch them return. Then hit Retrain ↻ — this page is not a recording, and the physics repeats from any seed.</span></div>
-    <figcaption><b>Linear:</b> the model keeps the two most important features at full strength and zeroes the rest; the best a linear map can do is principal components. <b>+ ReLU:</b> same data, same dimensions, one extra nonlinearity, and suddenly four or more features fit, arranged in opposing pairs.</figcaption>
+    </div></div>
+    <figcaption>Switch to Linear and four of the features drop to zero, and when you switch back they return. Retrain ↻ starts the training over from a new random seed, and the result is computed fresh each time rather than played back from a recording. With the linear model, the two most important features stay at full strength and the other four go to zero, which is the same answer principal component analysis would give. Adding the ReLU keeps the same data and the same two dimensions, and now four or five features fit, either in pairs pointing opposite ways or spread around the circle, depending on the seed. Across ten seeds we tested, the linear model kept two features every time and the ReLU model kept four or five.</figcaption>
   </figure>
 
-  <p>The linear model can't exploit overlap at all, no matter how long you let it run, because every bit of crosstalk between two features lands in the output undiminished, every single time; so its best available move is the clean sacrifice you tried in the game, keep the top two and drop the other four. That strategy is principal component analysis, though nothing in the model knows it by that name.</p>
-  <p>Add a ReLU and a bias and the arithmetic changes. The model learns a <em>negative bias</em> — a constant downward shove on every output — and the murmur that other features leak into yours gets shoved below zero, where the ReLU deletes it; real signals are loud enough to survive the shove and arrive more or less intact. Out of two cheap parts the model has built itself a <em class="term">noise gate</em>, which is what makes the cramming affordable, and which nobody designed — it is only what happens to minimize the loss.</p>
+  <p>The linear model can't use overlapping directions no matter how long you train it, because when two features overlap, the interference between them goes directly into the output every time. The best it can do is keep the top two features and drop the rest, which is one of the strategies you probably tried in the game. That solution is the same one principal component analysis gives, and the model arrives at it even though nothing in the setup mentions PCA.</p>
+  <p>With the ReLU, some of that interference can be removed, and how it gets removed depends on which of two layouts the run ends up in. In the default run, F1 and F2 point in nearly opposite directions, so when F1 fires on its own the model's reading for F2 comes out at about −1, and because the ReLU turns every negative number into zero, F2's output is still correct. Hit Retrain a few times and you'll also see runs where five features spread out around the circle instead. In that layout the interference comes out slightly positive, so the model learns a <em>negative bias</em> of around −0.2 that lowers every output a little. That's enough to put the small interference values below zero, where the ReLU sets them to zero, while a feature that's actually on is large enough to stay above zero. The ReLU and the bias together work like a <em class="term">noise gate</em> on a microphone, which silences anything below a threshold and lets louder signals through, and this is how the model stores more features than it has dimensions. Nobody designed this arrangement, since it's simply the one that happens to minimize the loss.</p>
 
-  <p class="aside">This is roughly CDMA, the multiple-access scheme in 3G cellphones. Each phone gets a code direction, signals overlap freely on one channel, and the receiver projects onto each code and thresholds away everyone else's crosstalk. Features are the phones, the hidden space is the channel, the ReLU with its negative bias is the receiver. Qualcomm engineers designed that on purpose; gradient descent just falls into it.</p>
+  <p class="aside">Cell phone networks have used a similar idea in a scheme called CDMA, which many 3G phones relied on. It let dozens of phones share one radio channel by giving each phone its own code, letting all the signals overlap on the channel, and having the receiver match each phone's code and cut everyone else's signal below a threshold. In the toy model the features are the phones, the two-dimensional hidden space is the shared channel, and the ReLU with its bias is the receiver. The comparison has limits, since CDMA uses long codes that Qualcomm's engineers designed on purpose while the toy model has two dimensions and finds its layout by gradient descent, but CDMA was used for the same reason the overlap works here, which is that there were more phones than the channel could carry if each had its own slice, and each phone only transmitted some of the time.</p>
 
-  <div class="takeaway"><b>Takeaway</b>Without a nonlinearity, interference is fatal and a model keeps only as many features as it has dimensions. A ReLU with a negative bias deletes small crosstalk instead, and that noise gate is what makes cramming affordable.</div>
+  <div class="takeaway">Without a nonlinearity, any overlap between features ends up as error in the output, so the model keeps only as many features as it has dimensions. With a ReLU, negative interference gets set to zero and a small negative bias brings slightly positive interference below zero as well, which lets the model store more features than it has dimensions.</div>
 </section>
 
 <!-- ============ 3. SPARSITY ============ -->
 <section id="sparsity">
   <h2><span class="secno">3.</span>Sparsity</h2>
-  <p>The noise gate has exactly one weakness: it deletes only <em>small</em> interference. When two overlapping features fire on the same input their crosstalk is large, it clears the threshold, and the output is corrupted. Everything therefore depends on collisions being rare, and collisions are rare precisely when features are <em class="term">sparse</em>.</p>
-  <p>Sparsity is the ordinary condition of language data. Of those 34 million features Anthropic pulled out of a production model, nearly every one is silent in any given sentence; “Korean text” and “HTTP request” and “academic citation” almost never turn up together. Rarity is what superposition spends, and the slider below controls how much of it the model has.</p>
-  <p>Same model as before, with the importances flattened so no feature wins on privilege alone. The slider changes one number, how often features are active. <b>Scrub it slowly from left to right.</b> Training never stops, so the model re-solves the problem live against whatever data you hand it.</p>
+  <p>The noise gate from the last section only removes <em>small</em> interference. When two overlapping features are active on the same input, the interference between them is large enough to get past the bias, and the output comes out wrong. So superposition only works well if overlapping features are rarely active at the same time, which is the case when features are <em class="term">sparse</em>, meaning each one is active on only a small fraction of inputs.</p>
+  <p>Language data looks sparse in this sense, since specific concepts like Korean text, HTTP requests, or academic citations each show up in only a small fraction of sentences, and they rarely show up together. (The dictionaries learned from real models are sparse too, but that is partly because they are trained with a penalty that makes them sparse, so it isn't separate evidence.) Superposition depends on this rarity, and the slider below sets how rare the features are.</p>
+  <p>This is the same model as before, with the importances made nearly flat (they go from 1 down to 0.69), so that no feature gets kept just because it matters more. The slider changes one number, which is how often each feature is active, and it works best if you move it slowly from left to right. Training runs the whole time, so the model keeps re-solving the problem for whatever data the slider gives it.</p>
 
-  <figure class="widget machine" id="w-sparsity">
+  <figure class="widget machine" id="w-sparsity"><div class="frame">
     <div class="w-head">
       <span class="w-title">Sparsity controls the geometry</span>
-      <span class="who">sibling of the model — equal importance</span>
-      <span class="ind"><i></i><b>LIVE</b></span>
+      <span class="who">6 features, nearly equal importance</span>
+      <span class="ind"><i></i><b>live</b></span>
       <div class="ctrl"><span>dense</span><input type="range" min="0" max="1" step="0.005" value="0"><span>sparse</span><button class="btn b-re">↻</button></div>
     </div>
     <div class="w-body">
       <div class="w-col"><canvas class="c-vec"></canvas><span class="lbl">feature directions, adapting live</span></div>
       <div class="w-col">
         <canvas class="c-bars"></canvas><span class="lbl">representation strength ‖Wᵢ‖</span>
-        <canvas class="c-strip"></canvas><span class="lbl">regime map (approximate) — you are here</span>
+        <canvas class="c-strip"></canvas><span class="lbl">regime map (approximate), with your position marked</span>
       </div>
     </div>
     <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
       <span class="readout">sparsity <b class="r-sp">—</b></span>
       <span class="readout">features represented <b class="r-rep">—</b> / 6</span>
-      <span class="readout">give it a moment to adapt after you move the slider</span>
-    </div>
-    <div class="try"><b>TRY</b><span>Scrub slowly and count the arrows as they squeeze in: two, three, four, five. Each jump is a phase transition. Give the model a moment to adapt after every move.</span></div>
-    <figcaption>At the dense end features collide constantly, interference doesn't pay, and the model holds exactly two features: pure PCA. As sparsity rises, collisions get rare and arrows squeeze in one at a time — first opposing pairs, finally five arrows splayed into a regular star.</figcaption>
+      <span class="readout">the model takes a few seconds to adapt after each move</span>
+    </div></div>
+    <figcaption>Move the slider slowly and count the arrows as they appear, from two up to three, four, and five. Give the model a few seconds to settle after each move. At the dense end, features are active together so often that overlapping them doesn't help, and the model keeps exactly two features, the same answer PCA gives. As the features get sparser and collisions become rare, more arrows fit in one at a time, first as opposite pairs and then, at the sparse end, usually as five arrows spread evenly around the circle, although occasionally a run fits all six.</figcaption>
   </figure>
 
-  <p>But the changes aren't gradual, which is the odd part. A configuration will hold across a wide stretch of the slider and then reorganize inside a few percent of travel, the way water sits there at 1°C being perfectly ordinary water and then stops being water. The resemblance isn't decorative — Elhage et&nbsp;al. showed these really are phase transitions in the physicists' sense<a href="#ref1"><sup>[1]</sup></a>, order parameters and all.</p>
-  <p>Look at where the scrub ends. Five near-unit arrows splay evenly around the circle, each paying a small and equally shared interference tax. At high sparsity the gate eats nearly all crosstalk, crosstalk becomes nearly free, and the network prices it accordingly. Capacity stopped meaning “two” the moment collisions became rare.</p>
-  <div class="takeaway"><b>Takeaway</b>Sparsity buys capacity. Features that rarely co-occur can share dimensions almost for free, and the number of features a space holds is set by collision frequency, not by dimension count. The regime changes are sharp phase transitions.</div>
+  <p>These changes happen suddenly, in that a layout stays the same across a wide range of slider positions and then rearranges within a few percent of the slider's travel, a bit like water that stays ordinary water all the way down to 1°C and then freezes. Elhage et&nbsp;al. call these phase changes, by analogy with physics, and map out where they happen for different numbers of features and dimensions.<a href="#ref1"><sup>[1]</sup></a></p>
+  <p>At the sparse end, the five arrows are close to full length and evenly spaced, so each one has a small and equal amount of interference with its neighbors. Features are rarely active together at this sparsity, so the ReLU and bias remove almost all of that interference, and the model stores five features in two dimensions with very little error.</p>
+  <div class="takeaway">The sparser the features, the more of them a space can hold. Features that are rarely active together can share dimensions with little error, so how many features a model can store depends on how often they collide as well as on how many dimensions it has. The layout changes in sudden jumps as sparsity increases.</div>
 </section>
 
 <!-- ============ 4. GEOMETRY ============ -->
 <section id="geometry">
   <h2><span class="secno">4.</span>Feature geometry</h2>
-  <p>Why a pentagon? Nothing in the loss function asks for a regular figure. It minimizes squared error and stops, and a lopsided arrangement of five arrows would satisfy that description too. Add a dimension and the coincidence turns into a pattern. Below is the same model with <b>eight features in three dimensions</b>, shown two ways — the arrows themselves, which you can rotate, and a quantity Elhage et&nbsp;al. call <em class="term">feature dimensionality</em>:</p>
+  <p>Nothing in the loss function asks for the regular pentagon at the end of the last section, since all the loss measures is squared reconstruction error. If you add a dimension, regular shapes show up again, which suggests the pentagon wasn't a coincidence. Below is the same kind of model with eight features in three dimensions, shown two ways: the arrows themselves, which you can rotate, and a quantity Elhage et&nbsp;al. call <em class="term">feature dimensionality</em>:</p>
   <p style="text-align:center" class="math">D<sub>i</sub> = ‖W<sub>i</sub>‖² / Σ<sub>j</sub> (Ŵ<sub>i</sub>·W<sub>j</sub>)²</p>
-  <p>Read <span class="math">D<sub>i</sub></span> as how much of a dimension feature i gets to itself. A private, untouched axis gives <span class="math">D=1</span>; sharing an axis with one antipodal partner gives exactly <span class="math">½</span>; a dropped feature gives 0.</p>
+  <p>You can read <span class="math">D<sub>i</sub></span> as how much of a dimension feature i has to itself. A feature with its own axis that nothing else touches gets <span class="math">D=1</span>, a feature that shares an axis with one partner pointing the opposite way gets exactly <span class="math">½</span>, and a dropped feature gets 0.</p>
 
   <details class="primer">
-    <summary>Primer: why the clean fractions? <span class="gist">— where ½ and 3/8 come from</span></summary>
+    <summary>Why the fractions come out to exactly ½ and 3/8</summary>
     <div class="p-body">
-      <p>The numerator <span class="math">‖W<sub>i</sub>‖²</span> measures how strongly feature i is stored. The denominator adds up how much every feature (including i itself) spills onto i's direction. If i has a private axis, the only spill is from itself, and the ratio is 1. If two features share one axis (pointing opposite ways), each one's denominator counts both — so each gets ½ of a dimension.</p>
-      <p>The general pattern: when n features split m dimensions <em>evenly</em> — every pair equally spread out, as in a regular polytope — each gets exactly <span class="math">m/n</span>. Eight features in three dimensions: 3/8. Five in two: 2/5. The fractions are clean because the geometry is exact, and the geometry is exact because anything uneven leaves easy loss on the table for gradient descent to grab.</p>
-      <p class="p-ref">Deeper: “feature dimensionality” in Elhage et&nbsp;al., section 5 <a href="#ref1">[1]</a>.</p>
+      <p>The numerator <span class="math">‖W<sub>i</sub>‖²</span> measures how strongly feature i is stored. The denominator adds up how much every feature, including i itself, projects onto i's direction. If i has an axis to itself, the only contribution is from i, and the ratio is 1. If two features share one axis and point in opposite directions, each one's denominator counts both of them, so each gets ½ of a dimension.</p>
+      <p>More generally, when n features split m dimensions <em>evenly</em>, with every pair equally spread out as in a regular polytope, each feature gets exactly <span class="math">m/n</span>. Eight features in three dimensions gives 3/8, and five in two gives 2/5. The fractions come out this clean because the shapes are regular, and the shapes are regular because an uneven arrangement has a higher loss, so gradient descent moves away from it.</p>
+      <p class="p-ref">Feature dimensionality is defined in section 5 of Elhage et&nbsp;al. <a href="#ref1">[1]</a>.</p>
     </div>
   </details>
 
-  <figure class="widget machine" id="w-geom">
+  <figure class="widget machine" id="w-geom"><div class="frame">
     <div class="w-head">
       <span class="w-title">8 features, 3 dimensions</span>
-      <span class="who">bigger sibling — 8 features, 3 neurons</span>
-      <span class="ind"><i></i><b>LIVE</b></span>
+      <span class="who">8 features, 3 neurons, equal importance</span>
+      <span class="ind"><i></i><b>live</b></span>
       <div class="ctrl"><span>denser</span><input type="range" min="0" max="1" step="0.005" value="1"><span>sparser</span><button class="btn b-re">↻</button></div>
     </div>
     <div class="w-body">
       <div class="w-col"><canvas class="c-3d"></canvas><span class="lbl">drag to rotate · dots = arrow tips</span></div>
       <div class="w-col"><canvas class="c-dims"></canvas><span class="lbl">fraction of a dimension each feature gets</span></div>
-    </div>
-    <div class="try"><b>TRY</b><span>Rotate the sphere until the eight dots resolve into two squares, twisted 45° apart. Then watch the strip chart: every feature settles at exactly 3/8 of a dimension.</span></div>
-    <figcaption>At high sparsity, all eight D values lock onto <b>3/8</b>: eight features splitting three dimensions exactly evenly. The arrow tips are the vertices of a <em>square antiprism</em>, a known optimal arrangement of eight points on a sphere. Lower the sparsity and features snap onto the other plateaus, ½ (an antipodal pair) and 1 (a private dimension).</figcaption>
+    </div></div>
+    <figcaption>Rotate the sphere until the eight dots line up as two squares, one turned 45° from the other. Then watch the chart on the right, where each feature settles at about 3/8 of a dimension. At high sparsity, all eight D values settle at about 3/8, which means the eight features split three dimensions evenly. The arrow tips sit at the corners of a <em>square antiprism</em>, the best known arrangement of eight points for the Thomson problem described below. Lower the sparsity and the features move onto the other flat steps, ½ for an opposite pair and 1 for a feature with its own dimension.</figcaption>
   </figure>
 
-  <p>The plateaus at clean fractions are the giveaway. What the network is doing — with no term in the loss that so much as mentions geometry, and no way of knowing it is doing it — is spreading points around a sphere so they sit as far from each other as it can manage, which is the problem J.&nbsp;J.&nbsp;Thomson posed in 1904 about electrons repelling on a sphere<a href="#ref6"><sup>[6]</sup></a> and mathematicians have picked at ever since. The known optimal arrangements are the shapes on your screen: antipodal pairs, triangles, tetrahedra, square antiprisms, etc. Given reconstruction error, 18 parameters, and 122 years less time, gradient descent finds them again.<a href="#ref1"><sup>[1]</sup></a></p>
-  <p>So stop asking what neuron 3 does. The neuron grid is a coordinate system and nothing more. Directions carry the meaning<a href="#ref10"><sup>[10]</sup></a>, the network arranges those directions by interference-minimizing geometry, and where the neuron axes happen to fall never enters the calculation.</p>
-  <div class="takeaway"><b>Takeaway</b>Features live in geometry, not in neurons. The network spreads feature directions into uniform polytopes, the known solutions to a sphere-packing problem posed in 1904, and the neuron axes are bystanders.</div>
+  <p>The flat steps at clean fractions point to what the model is doing. It spreads its feature directions over the sphere so that they sit as far from each other as possible, even though nothing in the loss mentions geometry, which is close to a question J.&nbsp;J.&nbsp;Thomson asked in 1904 about how electrons would arrange themselves if they all repelled each other.<a href="#ref6"><sup>[6]</sup></a> The best known arrangements for that problem on a sphere are the same shapes on your screen: opposite pairs, triangles, tetrahedra, and square antiprisms. The toy model's loss isn't Thomson's energy, so the two problems don't have to agree in general, but for the cases on this page gradient descent ends up at the same shapes.<a href="#ref1"><sup>[1]</sup></a></p>
+  <p>The hidden neurons in this toy have no nonlinearity on them, so you could rotate every arrow by the same angle and the model would work exactly as well. That means the neuron axes in this toy carry no meaning of their own, and only the directions of the features matter. (The idea that features correspond to directions is called the linear representation hypothesis, and Park et&nbsp;al. state it precisely enough to test.<a href="#ref10"><sup>[10]</sup></a>) Real models are different here, because the GPT-2 neurons at the top of the page come after a nonlinearity, which gives the model a reason to line some features up with individual neurons, and when Elhage et&nbsp;al. tested a model like that, they found some neurons that matched a single feature and many that still didn't.<a href="#ref1"><sup>[1]</sup></a></p>
+  <div class="takeaway">In this toy, features are stored as directions, and the network spreads those directions into regular shapes that match known solutions to Thomson's problem. The toy's hidden layer has no nonlinearity, so its neuron axes don't matter, but in real models with nonlinear neurons some features do line up with neurons.</div>
 </section>
 
 <!-- ============ 5. POLYSEMANTICITY ============ -->
 <section id="poly">
   <h2><span class="secno">5.</span>Polysemanticity</h2>
-  <p>So: what does one neuron respond to? Five feature arrows splay around a circle, and a neuron is one axis through that circle.</p>
-  <p>Below is <b>the model from the top of the page</b> — the same network you fired concepts into, trained at high sparsity into the pentagon and then frozen. Each panel shows one hidden neuron's weight on every feature. (It's also the specimen in the margin map, if your screen is wide enough to show one.)</p>
+  <p>This brings us back to the question from the top of the page. Five feature arrows are spread around a circle and a neuron is one axis through that circle, so we can ask what a single neuron in this model responds to.</p>
+  <p>Below is the model from the top of the page, the same network you fired concepts into, trained at high sparsity into the pentagon from the sparsity section and then frozen. Each panel shows one hidden neuron's weight on every feature. It is also the model shown in the margin on the left, if your screen is wide enough to show it.</p>
 
-  <figure class="widget machine" id="w-poly">
-    <div class="w-head"><span class="w-title">What each neuron “means”</span><span class="who m">⬡ the model itself</span><span class="readout r-prog">—</span></div>
-    <div class="w-body"><canvas></canvas></div>
-    <figcaption>Every neuron reads a weighted mix of nearly every feature — positive on some, negative on others. Neither neuron <em>means</em> anything by itself. The features are perfectly recoverable, but only as directions cutting diagonally across both neurons.</figcaption>
+  <figure class="widget machine" id="w-poly"><div class="frame">
+    <div class="w-head"><span class="w-title">What each neuron “means”</span><span class="who m">the model itself</span><span class="readout r-prog">—</span></div>
+    <div class="w-body"><canvas></canvas></div></div>
+    <figcaption>Each neuron reads a weighted mix of nearly every feature, positive for some and negative for others, so neither neuron corresponds to any one feature by itself. The features can still be read back almost perfectly, but only along directions that run diagonally across both neurons.</figcaption>
   </figure>
 
-  <p>That's the lobster-and-larvae neuron from the top of the page, reproduced in 18 parameters. Store five features as a pentagon and every axis has to cut across several of them, so every neuron ends up reading a weighted mixture of unrelated things — which is <em class="term">polysemanticity</em>, and which falls out of the geometry rather than out of anything going wrong in training. Olah et&nbsp;al. had catalogued these in vision models years before there was a mechanism to blame<a href="#ref7"><sup>[7]</sup></a>, and Arora et&nbsp;al. had found the same overlapping structure in word embeddings before that<a href="#ref12"><sup>[12]</sup></a>, which is usually how it goes: the phenomenon shows up, gets named, and waits.</p>
-  <p>This is where the obvious interpretability program, catalogue what each neuron does, hit its wall. The program was doomed by construction, because <b>the neuron basis is not the basis the information lives in</b>, though nothing has actually been lost in the process: the features are all still there, fully linear and fully recoverable, just rotated away from the axes we happened to be reading them along.</p>
-  <p>Which leaves an opening, since a scrambling done by a known trick ought to come undone by running the trick backwards.</p>
-  <div class="takeaway"><b>Takeaway</b>Polysemanticity is the cost of superposition, mechanically: store n features as a polytope in m&lt;n dimensions, and every neuron axis must cut across many features. Interpreting neurons fails because neurons were never the unit of meaning.</div>
+  <p>This is the same thing you saw with the lobster and larvae neuron at the top of the page, reproduced in a model with 18 parameters. If five features are stored as a pentagon, any axis you draw passes close to several of them, so each neuron reads out a weighted mix of unrelated features. In this toy, <em class="term">polysemanticity</em> follows directly from the geometry rather than from anything going wrong in training. Olah et&nbsp;al. documented polysemantic neurons in vision models before this mechanism was worked out,<a href="#ref7"><sup>[7]</sup></a> and Arora et&nbsp;al. found a similar overlapping structure in word embeddings even earlier.<a href="#ref12"><sup>[12]</sup></a></p>
+  <p>This helps explain why labeling what each neuron does has been so hard in language models. It doesn't always fail, and the same vision models have many neurons that respond to one clear thing, like curves or dog heads.<a href="#ref7"><sup>[7]</sup></a> But when features outnumber neurons and are stored this way, the neuron axes aren't the directions the features are stored along. In the toy nothing is lost, since all the features are still there and can be read back almost perfectly along their own directions, which are rotated away from the neuron axes we were reading.</p>
+  <p>If superposition mixes the features together in a way we understand, it might be possible to undo it.</p>
+  <div class="takeaway">In this toy, polysemanticity follows directly from superposition. When n features are stored as a regular shape in m&lt;n dimensions, every neuron axis crosses several features, so reading single neurons gives mixed results. In real models with nonlinear neurons, some features line up with neurons and many don't.</div>
 </section>
 
 <!-- ============ 6. SAE ============ -->
 <section id="sae">
   <h2><span class="secno">6.</span>Sparse autoencoders</h2>
-  <p>State the inversion problem in full. You are handed the hidden activations <span class="math">h</span>, two numbers per input, the superposed mush, and asked for the original features back. You don't know how many features there are, or where they point, and there is no answer key at the back.</p>
-  <p>The way in is <b>sparsity</b>, the same property that made superposition possible. If the true features are sparse, the right explanation of any single activation needs only a few ingredients, so the sparsest accurate explanation is probably the true one. That reasoning is the whole of the <em class="term">sparse autoencoder</em><a href="#ref2"><sup>[2]</sup></a><a href="#ref4"><sup>[4]</sup></a>: learn an overcomplete dictionary of candidate directions, ten here for at most six real features, rebuild each activation out of dictionary atoms, and charge a penalty of strength <b>λ</b> for every atom an explanation uses.</p>
+  <p>The reverse problem is to start from the hidden activations <span class="math">h</span>, which are two numbers per input with all the features mixed together, and recover the original features from them. You don't know how many features there are or which directions they point in, and there is no answer key to check against.</p>
+  <p>The usual approach relies on sparsity, the same property that made superposition possible. If the true features are sparse, then any single activation can be explained using only a few of them, so the sparsest explanation that still reconstructs the data accurately is likely to be the true one. This is the idea behind the <em class="term">sparse autoencoder</em>.<a href="#ref2"><sup>[2]</sup></a><a href="#ref4"><sup>[4]</sup></a> It learns a dictionary of candidate directions that is larger than needed (ten here, for at most six real features), rebuilds each activation out of those dictionary entries, which are called atoms, and adds a penalty of strength λ for every atom an explanation uses.</p>
   <details class="primer">
-    <summary>Primer: autoencoders, dictionaries, and why an L1 penalty forces sparsity <span class="gist">— the parts list for the lab below</span></summary>
+    <summary>Background on autoencoders, dictionaries, and why an L1 penalty produces zeros</summary>
     <div class="p-body">
-      <p>An <b>autoencoder</b> is a network trained to output its own input — pointless, except you constrain the middle, and the constraint forces it to learn structure. The toy model itself was one (constraint: only 2 dimensions). The <b>sparse</b> autoencoder flips the constraint: the middle layer is <em>bigger</em> than the input (10 slots for 2 numbers — an “overcomplete dictionary”), but it's penalized for having many slots active at once.</p>
-      <p>That penalty, <b>λ × (sum of activations)</b>, is the L1 penalty. Why does it force <em>zeros</em>, rather than just shrinking everything a bit? Because L1 charges the same rate for the first unit of activation as for the last — so the cheapest way to pay less is to switch slots off entirely. (A squared penalty would charge almost nothing near zero, so nothing would ever quite reach it.) Crank λ and slots start dying; that's exactly what you'll see in the lab below.</p>
-      <p class="p-ref">Deeper: Bricken et&nbsp;al., <em>Towards Monosemanticity</em>, “Problem Setup” <a href="#ref2">[2]</a>.</p>
+      <p>An autoencoder is a network trained to output its own input. That would be pointless except that the middle is constrained, and the constraint forces it to learn something about the structure of the data. The toy model was an autoencoder too, and its constraint was that the middle had only two dimensions. A sparse autoencoder uses a different constraint, where the middle layer is <em>bigger</em> than the input (10 slots for 2 numbers, which is what “overcomplete dictionary” means), but it is penalized for having many slots active at the same time.</p>
+      <p>That penalty, λ times the sum of the activations, is called an L1 penalty. It pushes activations all the way to zero instead of just making them smaller because it charges the same amount for the first bit of activation as for the last, so the cheapest way to lower the penalty is to turn slots off completely. A squared penalty would charge almost nothing for values near zero, so activations would get small without ever quite reaching zero. If you raise λ far enough, slots stop being used entirely, and you will see that happen in the figure below.</p>
+      <p class="p-ref">The setup is described in the “Problem Setup” section of Bricken et&nbsp;al., <em>Towards Monosemanticity</em> <a href="#ref2">[2]</a>.</p>
     </div>
   </details>
 
-  <p>Because this is a toy we have the luxury no one has on a real model: <b>we know the true features</b>, so the SAE can be graded rather than admired. The thick colored arrows below are the truth. The pale arrows are the dictionary, training live. Move λ and the dictionary reacts. You also get one instrument the other figures don't have — <b>click any atom to ablate it</b>, forcing it silent, and watch what the reconstruction loses.</p>
+  <p>Because this is a toy, we have something nobody has for a real model, which is the true features, so we can check how well the SAE did instead of just looking at its output. The thick colored arrows below are the true features and the pale arrows are the dictionary atoms, training live, and when you move λ the dictionary changes in response. This figure also lets you click any atom to ablate it, which forces it to stay at zero so you can see what the reconstruction loses without it.</p>
 
-  <figure class="widget machine" id="w-sae">
+  <figure class="widget machine" id="w-sae"><div class="frame">
     <div class="w-head">
       <span class="w-title">Sparse autoencoder vs. ground truth</span>
-      <span class="who m">⬡ reading the model's activations</span>
+      <span class="who m">trained on the model's activations</span>
       <span class="ind"><i></i><b>—</b></span>
       <div class="ctrl"><span>λ low</span><input type="range" min="0" max="1" step="0.005" value="0.78"><span>high</span><span class="readout r-lam">—</span><button class="btn b-re">Reset SAE</button></div>
     </div>
     <div class="w-body">
-      <div class="w-col"><canvas class="c-vec"></canvas><span class="lbl"><b>thick color</b> = true features · <b>pale</b> = SAE atoms · <b>dashed</b> = dead · <b>click an atom</b> to ablate it</span></div>
+      <div class="w-col"><canvas class="c-vec"></canvas><span class="lbl">thick color = true features · pale = SAE atoms · dashed = dead · click an atom to ablate it</span></div>
       <div class="w-col">
         <div class="scorebox" style="flex-direction:column">
           <div class="score s-rec"><div class="v">—</div><div class="k">feature recovery</div></div>
@@ -560,68 +544,66 @@ details.primer .p-ref{font-size:14px;color:var(--ink2);font-family:var(--mono)}
           <div class="score s-mse"><div class="v">—</div><div class="k">reconstruction error</div></div>
         </div>
       </div>
-    </div>
-    <div class="try"><b>TRY</b><span>Slide λ to both extremes and back to the middle. Then click an atom to ablate it: error spikes, one feature drops out of recovery, and the survivors strain toward the hole. Click again to give it back.</span></div>
-    <figcaption>Recovery = how well each true feature direction is matched by some live atom. <b>λ too low:</b> reconstruction is fine but each input smears across four or five atoms — a new polysemantic code, no better than the neurons. <b>Sweet spot (λ ≈ 0.1–0.5):</b> one atom per active feature, atoms snapped onto the truth, surplus atoms dead. <b>λ too high:</b> the dictionary starves, atom by atom, until nothing is represented at all.</figcaption>
+    </div></div>
+    <figcaption>Slide λ to both ends and back to the middle. Then click an atom to ablate it, and watch the reconstruction error go up, one feature drop out of the recovery score, and the remaining atoms shift toward the gap. Click it again to restore it. Recovery measures how closely each true feature direction is matched by some live atom. When λ is too low, reconstruction is good, but each input gets spread across four or five atoms, which is another mixed code and no easier to read than the neurons. Between about 0.1 and 0.5, each active feature uses one atom, the atoms line up with the true directions, and the extra atoms go unused. When λ is too high, atoms drop out one at a time until nothing is represented.</figcaption>
   </figure>
 
-  <p>Nobody told the SAE there were five features, or that they formed a pentagon, or anything else; it saw two-dimensional points and the sparsity penalty alone drove it onto the true directions, because the sparsest accurate description of superposed data <em>is</em> the original sparse features. The idea long predates interpretability — Olshausen and Field pulled Gabor-like receptive fields out of natural images in 1996 by asking for a sparse code and nothing more<a href="#ref8"><sup>[8]</sup></a>, which at the time was a claim about visual cortex.</p>
-  <p>Those failure modes at the ends of the slider are the working tensions of real interpretability, reproduced at 18 parameters: too little pressure and the dictionary stays entangled, too much and features die or shatter into fragments. Picking λ on a real model is mostly guesswork dressed up as methodology, since there's no answer key drawn in thick color to check it against, and the current workarounds are proxy metrics and architectural fixes like k-sparse autoencoders<a href="#ref5"><sup>[5]</sup></a> — which is a polite way of saying nobody has solved it yet.</p>
-  <p>Deleting a suspected feature to see what breaks is the basic move of causal interpretability. Here it costs a click and reports the damage on a meter. On a production model the same experiment is somebody's research program.</p>
-  <p>Does the recipe survive contact with a real network? Below are three atoms from a dictionary trained this way on GPT-2's residual stream, with verbatim records. You couldn't finish the sentence “this neuron detects ___” at the top of the page. Try it again.</p>
+  <p>The SAE wasn't told there were five features or that they formed a pentagon. It only saw two-dimensional points, and the sparsity penalty was enough to move its atoms onto the true directions. That works here because, for this data, the sparsest accurate description of the hidden activations is the original set of sparse features. That isn't guaranteed in general, and on real models SAEs sometimes merge features or split one feature into several. The idea is also much older than interpretability research. In 1996 Olshausen and Field got receptive fields resembling those in visual cortex out of natural images just by asking for a sparse code,<a href="#ref8"><sup>[8]</sup></a> and at the time it was a claim about how the visual system works.</p>
+  <p>The two ends of the slider show the same problems people run into with SAEs on real models. With too little penalty the dictionary stays mixed, and with too much, features disappear or break into pieces. On a real model there are no thick colored arrows showing the right answer, so choosing λ relies on proxy metrics, and changes to the method like k-sparse autoencoders, which set the number of active atoms directly, are one current way around it.<a href="#ref5"><sup>[5]</sup></a> It isn't a solved problem, which is part of why a toy where the answer is known is useful for checking the method.</p>
+  <p>Removing a suspected feature to see what breaks is a basic experiment in interpretability. Here it takes one click and the effect shows up on a meter, while on a large model the same kind of experiment takes much more work.</p>
+  <p>Below are three atoms from a dictionary trained the same way on GPT-2's residual stream, with their records copied exactly. At the top of the page you couldn't finish the sentence “this neuron detects&nbsp;___”, so try it again with these.</p>
 
-  <figure class="widget machine" id="w-real">
+  <figure class="widget machine" id="w-real"><div class="frame">
     <div class="w-head">
       <span class="w-title">Real dictionary atoms</span>
-      <span class="who m">real model — verbatim records</span>
+      <span class="who m">real model, verbatim records</span>
       <div class="ctrl"><button class="btn n-prev">←</button><span class="readout n-name">—</span><button class="btn n-next">→</button></div>
     </div>
     <div class="snips"></div>
     <div class="w-head" style="border-top:1px solid var(--m-rule);border-bottom:0">
       <span class="readout n-val">hover a lit token</span>
       <span class="readout">gpt2-small · layer 6 residual · SAE by Joseph Bloom · via Neuronpedia</span>
-    </div>
-    <div class="try"><b>TRY</b><span>Flip through all three atoms and name each one. Notice that this time you can.</span></div>
-    <figcaption>Verbatim records retrieved from <a href="https://www.neuronpedia.org/gpt2-small/6-res-jb/650">Neuronpedia</a> <a href="#ref3">[3]</a>; each atom's ID links to its live page. Where the raw neurons at the top of the page were mush, each dictionary atom means one thing. Same recipe you just ran, at real scale.</figcaption>
+    </div></div>
+    <figcaption>Flip through all three atoms and try to name each one. Records retrieved from <a href="https://www.neuronpedia.org/gpt2-small/6-res-jb/650">Neuronpedia</a> <a href="#ref3">[3]</a>, and each atom's ID links to its live page. Each of these atoms has one meaning you can name, unlike the neurons at the top of the page, with two caveats. We picked these three because they are easy to read, and many atoms in dictionaries like this are harder to name. They also come from GPT-2 small, while the neurons at the top came from GPT-2 XL, so this isn't a comparison within one model.</figcaption>
   </figure>
-  <div class="takeaway"><b>Takeaway</b>The same sparsity that lets networks cram features in is the lever that pulls them back apart. Dictionary learning with a sparsity penalty recovers the true feature directions from the superposed mush — that is the bet underneath all SAE-based interpretability.</div>
+  <div class="takeaway">The same sparsity that lets networks store features in superposition can be used to pull them back apart. Dictionary learning with a sparsity penalty recovers the true feature directions in this toy, and the bet behind SAE-based interpretability is that it does something similar in real models.</div>
 </section>
 
 <!-- ============ 7. EPILOGUE ============ -->
 <section id="epilogue">
-  <h2><span class="secno">7.</span>Interpretability as decompression</h2>
-  <p>Everything on this page happened in six features and two or three dimensions, and the gap to a real model is enormous: 768 dimensions per layer in the smallest GPT-2, tens of millions of features in the largest published dictionary. The toy has still been a faithful guide. Run this same recipe at production scale and the dictionary comes back with an atom for the Golden Gate Bridge, one for code backdoors, one for sycophantic praise — single clean directions pulled out of neurons that individually meant nothing<a href="#ref3"><sup>[3]</sup></a>.</p>
-  <p>The field has not settled the open edges. SAEs inherit superposition's tradeoffs rather than abolishing them: recovered features split and merge as the dictionary grows<a href="#ref2"><sup>[2]</sup></a>, and some structure isn't a direction at all — days of the week and months of the year come out as circles, which no dictionary of directions is going to recover cleanly<a href="#ref11"><sup>[11]</sup></a>. You have handled the raw material of that argument already. Feature death and feature shattering were the two ends of your λ slider.</p>
-  <p>The picture underneath survives the caveats. A neural network is a <em class="term">lossy compression scheme for the world</em>, with too many concepts, too few dimensions, sparsity exploited without mercy, and interference managed by geometry and a noise gate. Its internals look inscrutable for a mundane reason. We were reading them in the wrong basis, staring at the channel and calling it the message. Read that way, interpretability has a one-line definition:</p>
-  <p style="font-size:22px;font-style:italic;text-align:center;margin:28px 0">Interpretability is the decompression problem.</p>
-  <p>And decompression is hard precisely because the compression worked.</p>
+  <h2><span class="secno">7.</span>What carries over to real models</h2>
+  <p>Everything on this page used six or eight features and two or three dimensions, which is very far from a real model. The smallest GPT-2 has 768 dimensions per layer, and the largest published dictionaries have tens of millions of features. Even so, the same method has worked at that scale in some cases. Trained on a production model's residual stream, the dictionary included atoms for the Golden Gate Bridge, for backdoors in code, and for sycophantic praise, each a single direction in the residual stream that a person could name.<a href="#ref3"><sup>[3]</sup></a></p>
+  <p>A lot about this is still unsettled. SAEs have their own versions of superposition's tradeoffs, since the features they recover split and merge as the dictionary grows,<a href="#ref2"><sup>[2]</sup></a> and some structure isn't a straight-line direction at all. Days of the week and months of the year, for example, come out arranged in circles, which a dictionary of single directions can't recover cleanly.<a href="#ref11"><sup>[11]</sup></a> You have already seen two of these problems in the λ slider, where features died at one end and broke into pieces at the other.</p>
+  <p>The overall picture still holds up with those caveats. A model has far more things to track than it has dimensions, most of those things are rare, and the model stores them as overlapping directions and uses the ReLU and bias to remove most of the interference. If you read the result one neuron at a time, you get something like the lobster and larvae neuron from the top of the page, but along the right directions much of it becomes readable again. A large part of interpretability research right now is about finding those directions, and the sparse autoencoder you trained above is one of the main tools for doing it.</p>
 </section>
 
 <footer>
   <h3>References</h3>
   <ol class="refs">
-    <li id="ref1">Elhage, N., Hume, T., Olsson, C., Nanda, N., Henighan, T., et&nbsp;al. <a href="https://transformer-circuits.pub/2022/toy_model/index.html">Toy Models of Superposition</a>. Transformer Circuits Thread, Anthropic, 2022. <em>The toy model, the phase transitions, the polytope geometry, and the feature-dimensionality measure, all reproduced live on this page.</em></li>
-    <li id="ref2">Bricken, T., Templeton, A., Batson, J., Chen, B., Jermyn, A., et&nbsp;al. <a href="https://transformer-circuits.pub/2023/monosemantic-features">Towards Monosemanticity: Decomposing Language Models With Dictionary Learning</a>. Transformer Circuits Thread, Anthropic, 2023. <em>The SAE recipe reproduced in the lab; also the canonical citations/dialogue/HTTP/Korean polysemantic neuron, and the first careful treatment of feature splitting.</em></li>
-    <li id="ref3">Templeton, A., Conerly, T., Marcus, J., Lindsey, J., Bricken, T., et&nbsp;al. <a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/">Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet</a>. Anthropic, 2024. <em>Where the 34-million-feature figure comes from, and the Golden Gate Bridge feature. Browseable features at <a href="https://www.neuronpedia.org">Neuronpedia</a>.</em></li>
-    <li id="ref4">Cunningham, H., Ewart, A., Riggs, L., Huben, R., Sharkey, L. <a href="https://arxiv.org/abs/2309.08600">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a>. ICLR, 2024. <em>The independent result that dictionary learning recovers interpretable directions from real models.</em></li>
-    <li id="ref5">Gao, L., la Tour, T.&nbsp;D., Tillman, H., Goh, G., Troll, R., et&nbsp;al. <a href="https://arxiv.org/abs/2406.04093">Scaling and Evaluating Sparse Autoencoders</a>. OpenAI, 2024. <em>Where the λ tradeoff you scrubbed becomes an engineering problem: k-sparse autoencoders, dead-latent mitigation, and scaling laws for dictionary size.</em></li>
-    <li id="ref6">Thomson, J.&nbsp;J. <a href="https://doi.org/10.1080/14786440409463107">On the Structure of the Atom: an Investigation of the Stability and Periods of Oscillation of a number of Corpuscles arranged at equal intervals around the Circumference of a Circle</a>. Philosophical Magazine 7(39), 1904. <em>The sphere-packing problem gradient descent keeps rediscovering. Thomson was wrong about atoms.</em></li>
-    <li id="ref7">Olah, C., Cammarata, N., Schubert, L., Goh, G., Petrov, M., Carter, S. <a href="https://distill.pub/2020/circuits/zoom-in/">Zoom In: An Introduction to Circuits</a>. Distill, 2020. <em>Polysemantic neurons documented in vision models, and the argument for treating directions rather than neurons as the unit of analysis.</em></li>
-    <li id="ref8">Olshausen, B.&nbsp;A., Field, D.&nbsp;J. <a href="https://doi.org/10.1038/381607a0">Emergence of simple-cell receptive field properties by learning a sparse code for natural images</a>. Nature 381, 1996. <em>Dictionary learning, thirty years early, on visual cortex rather than transformers.</em></li>
-    <li id="ref9">Bills, S., Cammarata, N., Mossing, D., Tillman, H., Gao, L., et&nbsp;al. <a href="https://openaipublic.blob.core.windows.net/neuron-explainer/paper/index.html">Language Models Can Explain Neurons in Language Models</a>. OpenAI, 2023. <em>Source of the verbatim GPT-2 neuron records at the top of the page; the full dataset covers all 307,200 neurons of GPT-2 XL.</em></li>
-    <li id="ref10">Park, K., Choe, Y.&nbsp;J., Veitch, V. <a href="https://arxiv.org/abs/2311.03658">The Linear Representation Hypothesis and the Geometry of Large Language Models</a>. ICML, 2024. <em>The assumption underneath everything here — that features are directions — stated precisely enough to test.</em></li>
-    <li id="ref11">Engels, J., Liao, I., Michaud, E.&nbsp;J., Gurnee, W., Tegmark, M. <a href="https://arxiv.org/abs/2405.14860">Not All Language Model Features Are Linear</a>. 2024. <em>The counterexamples: circular representations of days and months that no dictionary of directions will cleanly recover.</em></li>
-    <li id="ref12">Arora, S., Li, Y., Liang, Y., Ma, T., Risteski, A. <a href="https://doi.org/10.1162/tacl_a_00034">Linear Algebraic Structure of Word Senses, with Applications to Polysemy</a>. TACL 6, 2018. <em>Superposition and sparse recovery in word embeddings, before either had these names.</em></li>
+    <li id="ref1">Elhage, N., Hume, T., Olsson, C., Nanda, N., Henighan, T., et&nbsp;al. <a href="https://transformer-circuits.pub/2022/toy_model/index.html">Toy Models of Superposition</a>. Transformer Circuits Thread, Anthropic, 2022. <em>The toy model, the phase changes, the polytope geometry, and the feature-dimensionality measure, all reproduced live on this page.</em></li>
+    <li id="ref2">Bricken, T., Templeton, A., Batson, J., Chen, B., Jermyn, A., et&nbsp;al. <a href="https://transformer-circuits.pub/2023/monosemantic-features">Towards Monosemanticity: Decomposing Language Models With Dictionary Learning</a>. Transformer Circuits Thread, Anthropic, 2023. <em>The SAE recipe used on this page, the citations, dialogue, HTTP, and Korean neuron, and an early careful treatment of feature splitting.</em></li>
+    <li id="ref3">Templeton, A., Conerly, T., Marcus, J., Lindsey, J., Bricken, T., et&nbsp;al. <a href="https://transformer-circuits.pub/2024/scaling-monosemanticity/">Scaling Monosemanticity: Extracting Interpretable Features from Claude 3 Sonnet</a>. Anthropic, 2024. <em>Source of the 34-million-feature dictionary and the Golden Gate Bridge feature. Features can be browsed at <a href="https://www.neuronpedia.org">Neuronpedia</a>.</em></li>
+    <li id="ref4">Cunningham, H., Ewart, A., Riggs, L., Huben, R., Sharkey, L. <a href="https://arxiv.org/abs/2309.08600">Sparse Autoencoders Find Highly Interpretable Features in Language Models</a>. ICLR, 2024. <em>An independent result showing that dictionary learning recovers interpretable directions from real models.</em></li>
+    <li id="ref5">Gao, L., la Tour, T.&nbsp;D., Tillman, H., Goh, G., Troll, R., et&nbsp;al. <a href="https://arxiv.org/abs/2406.04093">Scaling and Evaluating Sparse Autoencoders</a>. OpenAI, 2024. <em>The λ tradeoff at scale, with k-sparse autoencoders, ways to reduce dead latents, and scaling laws for dictionary size.</em></li>
+    <li id="ref6">Thomson, J.&nbsp;J. <a href="https://doi.org/10.1080/14786440409463107">On the Structure of the Atom: an Investigation of the Stability and Periods of Oscillation of a number of Corpuscles arranged at equal intervals around the Circumference of a Circle</a>. Philosophical Magazine 7(39), 1904. <em>The 1904 paper behind the Thomson problem discussed in the geometry section.</em></li>
+    <li id="ref7">Olah, C., Cammarata, N., Schubert, L., Goh, G., Petrov, M., Carter, S. <a href="https://distill.pub/2020/circuits/zoom-in/">Zoom In: An Introduction to Circuits</a>. Distill, 2020. <em>Documents vision-model neurons with one clear meaning as well as polysemantic ones, and argues for treating directions as the unit of analysis.</em></li>
+    <li id="ref8">Olshausen, B.&nbsp;A., Field, D.&nbsp;J. <a href="https://doi.org/10.1038/381607a0">Emergence of simple-cell receptive field properties by learning a sparse code for natural images</a>. Nature 381, 1996. <em>Sparse coding applied to natural images, decades before it was applied to transformers.</em></li>
+    <li id="ref9">Bills, S., Cammarata, N., Mossing, D., Tillman, H., Gao, L., et&nbsp;al. <a href="https://openaipublic.blob.core.windows.net/neuron-explainer/paper/index.html">Language Models Can Explain Neurons in Language Models</a>. OpenAI, 2023. <em>Source of the GPT-2 neuron records at the top of the page and of the explanation scores, covering all 307,200 neurons of GPT-2 XL.</em></li>
+    <li id="ref10">Park, K., Choe, Y.&nbsp;J., Veitch, V. <a href="https://arxiv.org/abs/2311.03658">The Linear Representation Hypothesis and the Geometry of Large Language Models</a>. ICML, 2024. <em>States the assumption that features are directions precisely enough to test.</em></li>
+    <li id="ref11">Engels, J., Liao, I., Michaud, E.&nbsp;J., Gurnee, W., Tegmark, M. <a href="https://arxiv.org/abs/2405.14860">Not All Language Model Features Are Linear</a>. 2024. <em>Counterexamples to that assumption, including circular representations of days and months.</em></li>
+    <li id="ref12">Arora, S., Li, Y., Liang, Y., Ma, T., Risteski, A. <a href="https://doi.org/10.1162/tacl_a_00034">Linear Algebraic Structure of Word Senses, with Applications to Polysemy</a>. TACL 6, 2018. <em>Finds overlapping word senses in embeddings and recovers them with sparse coding, before either idea had its current name.</em></li>
+    <li id="ref13">Lecomte, V., Thaman, K., Schaeffer, R., Bashkansky, N., Chow, T., Koyejo, S. <a href="https://arxiv.org/abs/2312.03096">What Causes Polysemanticity? An Alternative Origin Story of Mixed Selectivity from Incidental Causes</a>. arXiv, 2023. <em>Shows that polysemantic neurons can arise without superposition.</em></li>
   </ol>
   <h3>Notes</h3>
-  <p>The toy models here have 18 parameters (12 in W, 6 biases) for the six-feature version and 32 for the eight-feature one; the SAEs add 40 more. Everything runs a full Adam training loop in plain JavaScript, no GPU and no server, seeded so that the ↻ buttons re-roll rather than reset. The figures draw a lightly time-averaged view of the weights, because the raw ones vibrate with per-batch sampling noise at convergence and the vibration means nothing; the training underneath uses the raw weights. Real-model records were fetched once from the OpenAI neuron dataset <a href="#ref9">[9]</a> and the Neuronpedia API and are shipped verbatim.</p>
-  <p class="repro"><b>Reproduced live from Elhage et&nbsp;al. <a href="#ref1">[1]</a>, and checked in the test suite:</b><br>
-    <span class="ok">✓</span> linear model collapses to the top-m principal components&ensp;
-    <span class="ok">✓</span> ReLU and a negative bias produce superposition on identical data&ensp;
-    <span class="ok">✓</span> antipodal pairs, then the 5-in-2 pentagon, as sparsity rises&ensp;
-    <span class="ok">✓</span> feature dimensionality sticking at 1, ½, and 3/8&ensp;
-    <span class="ok">✓</span> SAE recovery of ground-truth directions, with the dead-atom and shattering regimes at either end of λ</p>
-  <div class="fin">···</div>
+  <p>The toy models here have 18 parameters (12 in W and 6 biases) for the six-feature version and 32 for the eight-feature one, and the SAEs add 50 more. Everything runs a full Adam training loop in plain JavaScript with no GPU and no server, seeded so that the ↻ buttons pick a new seed rather than resetting to the same one. The figures draw a lightly time-averaged view of the weights, because near convergence the raw weights shake with noise from individual batches and that shaking doesn't mean anything, while the training itself uses the raw weights. Real-model records were fetched once from the OpenAI neuron dataset <a href="#ref9">[9]</a> and the Neuronpedia API and are included exactly as retrieved.</p>
+  <p>Results from Elhage et&nbsp;al. <a href="#ref1">[1]</a> reproduced live on this page and checked in its test suite:</p>
+  <ul class="repro">
+    <li>linear model collapses to the top-m principal components</li>
+    <li>ReLU and a negative bias produce superposition on identical data</li>
+    <li>antipodal pairs, then the 5-in-2 pentagon, as sparsity rises</li>
+    <li>feature dimensionality sticking at 1, ½, and 3/8</li>
+    <li>SAE recovery of ground-truth directions, with the dead-atom and shattering regimes at either end of λ</li>
+  </ul>
 </footer>
 
 </main>
@@ -958,14 +940,14 @@ function recordBrowser(root,items,label){
     for(let i=0;i<6;i++)P.arrow(model.col(i,S),FC[i],{lw:2.5});
     drawBars(bx,250,300,[...Array(6)].map((_,i)=>model.colNorm(i,S)),FC,{target:1,targetLabel:'goal',pal:M});
     lossEl.textContent=fmt(lossD,4);stepEl.textContent=model.steps.toLocaleString();
-    if(ind){const live=model.steps<12000;ind.classList.toggle('frozen',!live);indB.textContent=live?'LIVE':'CONVERGED'}
+    if(ind){const live=model.steps<12000;ind.classList.toggle('frozen',!live);indB.textContent=live?'live':'converged'}
   }};
   build();register(root,w);
 })();
 
 // ---------- 3. sparsity dial ----------
 // boundaries measured: 9k-step training, 3 seeds per point (see test sweep)
-const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']];
+const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 (pentagon)']];
 (function(){
   const root=$('#w-sparsity');if(!root)return;
   const Id=[1,.93,.86,.8,.74,.69];let seed=5;
@@ -1047,7 +1029,7 @@ const REGIONS=[[0,.07,'2'],[.07,.17,'3'],[.17,.37,'4'],[.37,1,'5 — pentagon']]
       ctx.beginPath();ctx.arc(X,Y,4.5,0,7);ctx.fill();ctx.globalAlpha=1;
     }
   }
-  const REF=[[1,'1 — own dimension'],[.5,'1/2 — antipodal pair'],[.375,'3/8 — antiprism'],[0,'0 — dropped']];
+  const REF=[[1,'1: own dimension'],[.5,'1/2: opposite pair'],[.375,'3/8: antiprism'],[0,'0: dropped']];
   function drawHist(){
     hx.clearRect(0,0,330,300);hx.font=SANS;
     const L=36,T=12,W2=330-L-10,H2=300-T-26,ymax=1.08;
@@ -1097,7 +1079,7 @@ BASE.tickTrain=()=>{ if(BASE.done)return;
     for(let a=0;a<2;a++){
       const ox=a*285+10,mid=135;
       ctx.fillStyle=M.ink;ctx.textAlign='left';ctx.font='600 '+SANS;
-      ctx.fillText(`neuron ${a+1} — weight per feature`,ox+8,18);ctx.font=SANS;
+      ctx.fillText(`neuron ${a+1}: weight per feature`,ox+8,18);ctx.font=SANS;
       ctx.strokeStyle=M.rule;ctx.beginPath();ctx.moveTo(ox+8,mid);ctx.lineTo(ox+262,mid);ctx.stroke();
       for(let i=0;i<6;i++){
         const v=m.theta[a*6+i],h=v*52,x=ox+18+i*41;
@@ -1163,7 +1145,7 @@ BASE.tickTrain=()=>{ if(BASE.done)return;
   }
   const w={tick(){
     BASE.tickTrain();
-    if(ind){ind.classList.toggle('frozen',!BASE.done);indB.textContent=BASE.done?'LIVE':'WAITING'}
+    if(ind){ind.classList.toggle('frozen',!BASE.done);indB.textContent=BASE.done?'live':'waiting'}
     if(!BASE.done)return;
     if(!sae)sae=new SAE({k:K,m:2,lam,seed:7});
     const hot=abl.some(x=>x);          // scalpel in: slow motion, so the wound and the healing are visible
@@ -1188,7 +1170,7 @@ BASE.tickTrain=()=>{ if(BASE.done)return;
     recEl.textContent=(100*recD).toFixed(0)+'%';
     liveEl.textContent=live+' / '+K;l0El.textContent=l0.toFixed(1);
     if(mseEl)mseEl.textContent=mseD==null?'—':mseD.toFixed(3);
-    lamEl.textContent='λ = '+lam.toPrecision(2)+(hot?' · scalpel in — slow motion':'');
+    lamEl.textContent='λ = '+lam.toPrecision(2)+(hot?' · atom ablated, training slowed down':'');
   }};
   register(root,w);
 })();
@@ -1207,16 +1189,16 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
   const lamps=[...root.querySelectorAll('.lamps button')];
   const manual=new Set();let pulses=[],t0ms=null,demo=true,si=0,lastAmb=0;
   const SCRIPT=[                                  // wall-clock ms after training completes
-    {at:500,sub:'Every word drifting around you is something a network must remember.'},
-    {at:3200,sub:'This one has room for six — and only two neurons to keep them in. Watch:',fire:[0]},
+    {at:500,sub:'Each drifting word stands for something a language model has to keep track of.'},
+    {at:3200,sub:'This network stores six concepts using two neurons. Here it is reading one back.',fire:[0]},
     {at:6200,fire:[2]},
-    {at:8200,sub:'…clean readout, every time. Six concepts, two neurons.',fire:[3]},
-    {at:10900,sub:'Now fire two at once:',fire:[1,4]},
-    {at:12500,sub:'✗ Crosstalk — they collided. This whole page is about that tradeoff.'},
-    {at:15200,sub:'Your turn. Click the lamps — can you find a pair that survives?',end:true},
+    {at:8200,sub:'When a concept fires on its own, it comes back out correctly.',fire:[3]},
+    {at:10900,sub:'Here are two concepts firing at the same time.',fire:[1,4]},
+    {at:12500,sub:'✗ The two interfered and the readout went wrong. The rest of this page explains why.'},
+    {at:15200,sub:'Click the buttons on the left to fire concepts yourself, and see if you can find a pair that reads back correctly.',end:true},
   ];
   function endDemo(){demo=false;skipB.style.display='none'}
-  skipB.onclick=()=>{endDemo();pulses=[];subEl.textContent='Your turn. Click the lamps — can you find a pair that survives?'};
+  skipB.onclick=()=>{endDemo();pulses=[];subEl.textContent='Click the buttons on the left to fire concepts yourself, and see if you can find a pair that reads back correctly.'};
   lamps.forEach(b=>b.onclick=()=>{
     if(demo){endDemo();subEl.textContent=''}
     const i=+b.dataset.i;manual.has(i)?manual.delete(i):manual.add(i);b.classList.toggle('on');pulses=[]});
@@ -1343,26 +1325,17 @@ const WORDS=('gravity sarcasm Seoul semicolons jazz enzymes irony April vowels d
       ox.beginPath();ox.moveTo(tx2,y0-3);ox.lineTo(tx2,y0+15);ox.stroke();
       if(d>.28){ox.fillStyle='#ff6b4a';ox.beginPath();ox.arc(254,y0+6,3.5,0,7);ox.fill()}
     }
-    if(!BASE.done){errEl.textContent='assembling the model… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
-    else if(lost){errEl.textContent='✗ lost — the model never stored this concept';errEl.style.color='#ff8a63'}
-    else if(worst>.28){errEl.textContent='✗ crosstalk — concepts collided';errEl.style.color='#ff8a63'}
-    else{errEl.textContent='✓ clean readout';errEl.style.color='#f2f2f0'}
+    if(!BASE.done){errEl.textContent='training the model… '+Math.round(100*m.steps/8000)+'%';errEl.style.color=''}
+    else if(lost){errEl.textContent='✗ not stored: the model dropped this concept';errEl.style.color='#ff8a63'}
+    else if(worst>.28){errEl.textContent='✗ the concepts interfered';errEl.style.color='#ff8a63'}
+    else{errEl.textContent='✓ read back correctly';errEl.style.color='#f2f2f0'}
   }};
   window.__dbg.hero=()=>({t0ms,si,demo,pulses:pulses.length,words:words.length,skipShown:skipB.style.display!=='none'});
   register(root,w);
 })();
 
-// ---------- scroll reveal + progress nav ----------
+// ---------- primer toggle + progress nav ----------
 (function(){
-  const rd=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(!rd){
-    const els=[...document.querySelectorAll('figure.widget,.takeaway')];
-    els.forEach(e=>e.classList.add('reveal'));
-    const ro=new IntersectionObserver(es=>es.forEach(en=>{
-      if(en.isIntersecting){en.target.classList.add('in');ro.unobserve(en.target)}
-    }),{rootMargin:'0px 0px -6% 0px'});
-    els.forEach(e=>ro.observe(e));
-  }
   const pa=document.querySelector('#primer-all');
   if(pa)pa.onclick=()=>{
     const ds=[...document.querySelectorAll('details.primer')],open=ds.some(d=>!d.open);
